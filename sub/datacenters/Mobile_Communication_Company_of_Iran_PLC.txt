@@ -1,6 +1,0 @@
-trojan://4y3urfv9-3om4-90aa-ujn7-6q5a9iovb479@127.0.0.1:1080?security=tls&type=tcp#[ LAST UPDATE: 2025-07-16 | 15:20 ]
-trojan://9a3fbqkv-avsp-wkbl-2j9w-rrbwaj135rdq@127.0.0.1:2080?security=tls&type=tcp#「 ✨ Free Internet For All 」 @OXNET_IR
-trojan://f8qvqsb6-arm7-iye7-azmg-painvymi8735@127.0.0.1:4080?security=tls&type=tcp#「 PlanAsli ☕ 」
-vless://23087c60-3d68-4ba0-a75c-144af3f64950@cdn29_80.vip1200.com:80?type=tcp&security=none#IR 🇮🇷 ┇ VLESS-TCP-NTLS - Mobile Communication Company of Iran PLC ┇ 89.45.51.148
-trojan://81mnqcts-l6vd-bbcp-rzt7-zoe7xz0xwdmu@127.0.0.1:8080?security=tls&type=tcp#❤️ Your Daily Dose of Proxies @OXNET_IR
-trojan://yzjjgi9i-w9pz-qy0c-en4c-azh9ajjl0ztt@127.0.0.1:8081?security=tls&type=tcp#</> Collector v7.0.4

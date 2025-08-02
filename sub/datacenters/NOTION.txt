@@ -1,6 +1,0 @@
-trojan://z3rm1hy1-489d-uim1-897o-f9u30y4ezus7@127.0.0.1:1080?security=tls&type=tcp#[ LAST UPDATE: 2025-07-24 | 00:59 ]
-trojan://lcf9vdt8-0cjb-fiba-gqgc-270qhinsh1ml@127.0.0.1:2080?security=tls&type=tcp#「 ✨ Free Internet For All 」 @OXNET_IR
-trojan://0woj9gjt-sv9i-cwm2-k1xd-ykfi2hbtjtbo@127.0.0.1:4080?security=tls&type=tcp#「 PlanAsli ☕ 」
-vless://ce02ef89-4a22-40d3-a962-9a8e12c252fe@ht1.xservers.ir:80?type=httpupgrade&security=none&path=/XRAYVPNHTTPUPGRADE#US 🇺🇸 ┇ VLESS-HTTPUPGRADE-NTLS - NOTION ┇ 208.103.161.161
-trojan://nuwdqh1r-4143-v7pe-sb1p-gkd31ozoh6z2@127.0.0.1:8080?security=tls&type=tcp#❤️ Your Daily Dose of Proxies @OXNET_IR
-trojan://92dy1q1h-p1sm-3p4a-na01-5eavjyftfnqp@127.0.0.1:8081?security=tls&type=tcp#</> Collector v7.0.4

@@ -1,6 +1,0 @@
-trojan://9cy470v2-241l-1y84-e1uf-ekgam63bis5d@127.0.0.1:1080?security=tls&type=tcp#🕒 LAST UPDATE: 2025/07/29 | 17:27
-trojan://kf4htgcw-4ziu-3yw0-zeim-7ajhx6lr0pkm@127.0.0.1:2080?security=tls&type=tcp#✨ Free Internet For All | @DailyV2Config
-trojan://6bqsv8ed-l4fc-jksr-077c-5haplj0a2tgb@127.0.0.1:4080?security=tls&type=tcp#☕ Join Us | Telegram @eQnz_github
-trojan://87f6eb37-36af-4347-95c7-8b3b0a3e9194@80.78.132.177:443?sni=download.windowsupdate1.com&peer=download.windowsupdate1.com&security=tls#DE 🇩🇪 ┇ TROJAN-TCP-TLS - SkyLink Data Center BV ┇ 80.78.132.177
-trojan://xa9rsnrv-8lvj-5gb8-4kbm-ljty80ccwbxa@127.0.0.1:8080?security=tls&type=tcp#❤️ Daily config Updates | @DailyV2Config
-trojan://umfe2c5u-fkj5-cj6y-8uvx-7mumuv9w4qnz@127.0.0.1:8081?security=tls&type=tcp#💻 Collector v4.0 | Powered by eQnz
