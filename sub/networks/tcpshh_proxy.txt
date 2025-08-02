@@ -1,6 +1,0 @@
-trojan://yo4afuem-31bh-tkuv-cfxh-jjqiecilsnrs@127.0.0.1:1080?security=tls&type=tcp#[ LAST UPDATE: 2025-07-11 | 20:31 ]
-trojan://hw7o2oqw-g934-mt6b-e1sa-c5qe2me4aow7@127.0.0.1:2080?security=tls&type=tcp#「 ✨ Free Internet For All 」 @OXNET_IR
-trojan://6dlzd6cp-xftc-vwk3-wmvc-6bso7iti40un@127.0.0.1:3080?security=tls&type=tcp#❤️ Your Daily Dose of Proxies @OXNET_IR
-trojan://sao7dkjh-1ln5-4coi-cjow-is2ews706na4@127.0.0.1:4080?security=tls&type=tcp#「 PlanAsli ☕ 」
-vless://ae9539b5-70dd-41b5-9666-11a29559a840@ver2.tcod008.info:59761?type=tcp@shh_proxy&security=none#IR 🇮🇷 ┇ VLESS-TCP@SHH_PROXY-NTLS - Web Dadeh Paydar Co (Ltd) ┇ 185.155.72.101
-trojan://ybcgljwe-xb4u-xtyw-jhzn-3gwgr5hrh1lg@127.0.0.1:8080?security=tls&type=tcp#</> Collector v5.1.0
