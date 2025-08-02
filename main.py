@@ -94,10 +94,18 @@ class AppConfig:
     DNT_SIGNATURE = "❤️ Daily config Updates | @DailyV2Config"
     DEV_SIGNATURE = "💻 Collector v4.0 | Powered by eQnz"
     CUSTOM_SIGNATURE = "☕ Join Us | Telegram @eQnz_github"
+    
+    # --- New GitHub Configuration ---
+    ENABLE_GITHUB_UPDATE = True # Set to True to enable pushing to GitHub
+    GITHUB_USERNAME = os.getenv("GITHUB_USERNAME")
+    GITHUB_REPO = os.getenv("GITHUB_REPO")
+    GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+    GITHUB_BRANCH = "main"
 
 CONFIG = AppConfig()
 console = Console()
 
+# ... (All previous classes and functions remain unchanged) ...
 def setup_logger():
     logging.basicConfig(level=logging.INFO, format='%(message)s', datefmt="[%X]", handlers=[])
     logging.getLogger("httpx").setLevel(logging.WARNING)
@@ -109,13 +117,14 @@ logger = setup_logger()
 class V2RayCollectorException(Exception): pass
 class ParsingError(V2RayCollectorException): pass
 class NetworkError(V2RayCollectorException): pass
+class GitHubError(V2RayCollectorException): pass
 
 COUNTRY_CODE_TO_FLAG = {
-    'AD': '🇦🇩', 'AE': '🇦🇪', 'AF': '🇦🇫', 'AG': '🇦🇬', 'AI': '🇦🇮', 'AL': '🇦🇱', 'AM': '🇦🇲', 'AO': '🇦🇴', 'AQ': '🇦🇶', 'AR': '🇦🇷', 'AS': '🇦🇸', 'AT': '🇦🇹', 'AU': '🇦🇺', 'AW': '🇦🇼', 'AX': '🇦🇽', 'AZ': '🇦🇿', 'BA': '🇧🇦', 'BB': '🇧🇧',
+    'AD': '🇦🇩', 'AE': '🇦🇪', 'AF': '🇦🇫', 'AG': '🇦🇬', 'AI': '�🇮', 'AL': '🇦🇱', 'AM': '🇦🇲', 'AO': '🇦🇴', 'AQ': '🇦🇶', 'AR': '🇦🇷', 'AS': '🇦🇸', 'AT': '🇦🇹', 'AU': '🇦🇺', 'AW': '🇦🇼', 'AX': '🇦🇽', 'AZ': '🇦🇿', 'BA': '🇧🇦', 'BB': '🇧🇧',
     'BD': '🇧🇩', 'BE': '🇧🇪', 'BF': '🇧🇫', 'BG': '🇧🇬', 'BH': '🇧🇭', 'BI': '🇧🇮', 'BJ': '🇧🇯', 'BL': '🇧🇱', 'BM': '🇧🇲', 'BN': '🇧🇳', 'BO': '🇧🇴', 'BR': '🇧🇷', 'BS': '🇧🇸', 'BT': '🇧🇹', 'BW': '🇧🇼', 'BY': '🇧🇾', 'BZ': '🇧🇿', 'CA': '🇨🇦',
     'CC': '🇨🇨', 'CD': '🇨🇩', 'CF': '🇨🇫', 'CG': '🇨🇬', 'CH': '🇨🇭', 'CI': '🇨🇮', 'CK': '🇨🇰', 'CL': '🇨🇱', 'CM': '🇨🇲', 'CN': '🇨🇳', 'CO': '🇨🇴', 'CR': '🇨🇷', 'CU': '🇨🇺', 'CV': '🇨🇻', 'CW': '🇨🇼', 'CX': '🇨🇽', 'CY': '🇨🇾', 'CZ': '🇨🇿',
     'DE': '🇩🇪', 'DJ': '🇩🇯', 'DK': '🇩🇰', 'DM': '🇩🇲', 'DO': '🇩🇴', 'DZ': '🇩🇿', 'EC': '🇪🇨', 'EE': '🇪🇪', 'EG': '🇪🇬', 'ER': '🇪🇷', 'ES': '🇪🇸', 'ET': '🇪🇹', 'FI': '🇫🇮', 'FJ': '🇫🇯', 'FK': '🇫🇰', 'FM': '🇫🇲', 'FO': '🇫🇴', 'FR': '🇫🇷',
-    'GA': '🇬🇦', 'GB': '🇬🇧', 'GD': '�🇩', 'GE': '🇬🇪', 'GF': '🇬🇫', 'GG': '🇬🇬', 'GH': '🇬🇭', 'GI': '🇬🇮', 'GL': '🇬🇱', 'GM': '🇬🇲', 'GN': '🇬🇳', 'GP': '🇬🇵', 'GQ': '🇬🇶', 'GR': '🇬🇷', 'GS': '🇬🇸', 'GT': '🇬🇹', 'GU': '🇬🇺', 'GW': '🇬🇼',
+    'GA': '🇬🇦', 'GB': '🇬🇧', 'GD': '🇬🇩', 'GE': '🇬🇪', 'GF': '🇬🇫', 'GG': '🇬🇬', 'GH': '🇬🇭', 'GI': '🇬🇮', 'GL': '🇬🇱', 'GM': '🇬🇲', 'GN': '🇬🇳', 'GP': '🇬🇵', 'GQ': '🇬🇶', 'GR': '🇬🇷', 'GS': '🇬🇸', 'GT': '🇬🇹', 'GU': '🇬🇺', 'GW': '🇬🇼',
     'GY': '🇬🇾', 'HK': '🇭🇰', 'HN': '🇭🇳', 'HR': '🇭🇷', 'HT': '🇭🇹', 'HU': '🇭🇺', 'ID': '🇮🇩', 'IE': '🇮🇪', 'IL': '🇮🇱', 'IM': '🇮🇲', 'IN': '🇮🇳', 'IO': '🇮🇴', 'IQ': '🇮🇶', 'IR': '🇮🇷', 'IS': '🇮🇸', 'IT': '🇮🇹', 'JE': '🇯🇪', 'JM': '🇯🇲',
     'JO': '🇯🇴', 'JP': '🇯🇵', 'KE': '🇰🇪', 'KG': '🇰🇬', 'KH': '🇰🇭', 'KI': '🇰🇮', 'KM': '🇰🇲', 'KN': '🇰🇳', 'KP': '🇰🇵', 'KR': '🇰🇷', 'KW': '🇰🇼', 'KY': '🇰🇾', 'KZ': '🇰🇿', 'LA': '🇱🇦', 'LB': '🇱🇧', 'LC': '🇱🇨', 'LI': '🇱🇮', 'LK': '🇱🇰',
     'LR': '🇱🇷', 'LS': '🇱🇸', 'LT': '🇱🇹', 'LU': '🇱🇺', 'LV': '🇱🇻', 'LY': '🇱🇾', 'MA': '🇲🇦', 'MC': '🇲🇨', 'MD': '🇲🇩', 'ME': '🇲🇪', 'MF': '🇲🇫', 'MG': '🇲🇬', 'MH': '🇲🇭', 'MK': '🇲🇰', 'ML': '🇲🇱', 'MM': '🇲🇲', 'MN': '🇲🇳', 'MO': '🇲🇴',
@@ -993,6 +1002,101 @@ class ConfigProcessor:
                 
         return categories
 
+class GitHubUpdater:
+    def __init__(self, username: str, repo: str, token: str, branch: str = "main"):
+        self.username = username
+        self.repo = repo
+        self.branch = branch
+        self.api_url = f"https://api.github.com/repos/{username}/{repo}"
+        self.headers = {
+            "Authorization": f"token {token}",
+            "Accept": "application/vnd.github.v3+json"
+        }
+
+    async def _api_call(self, method: str, url: str, **kwargs) -> Dict[str, Any]:
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.request(method, url, headers=self.headers, **kwargs)
+                response.raise_for_status()
+                return response.json()
+            except httpx.HTTPStatusError as e:
+                raise GitHubError(f"GitHub API error: {e.response.status_code} - {e.response.text}") from e
+            except httpx.RequestError as e:
+                raise GitHubError(f"Network error during GitHub API call: {e}") from e
+
+    async def get_latest_commit_sha(self) -> str:
+        url = f"{self.api_url}/git/ref/heads/{self.branch}"
+        data = await self._api_call("GET", url)
+        return data["object"]["sha"]
+
+    async def create_blob(self, content: str) -> str:
+        url = f"{self.api_url}/git/blobs"
+        payload = {"content": content, "encoding": "utf-8"}
+        data = await self._api_call("POST", url, json=payload)
+        return data["sha"]
+
+    async def create_tree(self, base_tree_sha: str, tree_objects: List[Dict]) -> str:
+        url = f"{self.api_url}/git/trees"
+        payload = {"base_tree": base_tree_sha, "tree": tree_objects}
+        data = await self._api_call("POST", url, json=payload)
+        return data["sha"]
+
+    async def create_commit(self, tree_sha: str, parent_commit_sha: str, message: str) -> str:
+        url = f"{self.api_url}/git/commits"
+        payload = {"message": message, "tree": tree_sha, "parents": [parent_commit_sha]}
+        data = await self._api_call("POST", url, json=payload)
+        return data["sha"]
+
+    async def update_branch_ref(self, commit_sha: str):
+        url = f"{self.api_url}/git/refs/heads/{self.branch}"
+        payload = {"sha": commit_sha}
+        await self._api_call("PATCH", url, json=payload)
+
+    async def upload_files(self, commit_message: str):
+        console.log("[bold cyan]Starting GitHub update process...[/bold cyan]")
+        try:
+            latest_commit_sha = await self.get_latest_commit_sha()
+            
+            tree_objects = []
+            files_to_upload = list(CONFIG.OUTPUT_DIR.rglob("*.*"))
+            
+            if not files_to_upload:
+                console.log("[yellow]No files found in 'sub' directory to upload.[/yellow]")
+                return
+
+            console.log(f"Found {len(files_to_upload)} files to upload.")
+
+            for file_path in files_to_upload:
+                if file_path.is_file():
+                    async with aiofiles.open(file_path, 'r', encoding='utf-8') as f:
+                        content = await f.read()
+                    
+                    blob_sha = await self.create_blob(content)
+                    repo_path = file_path.relative_to(CONFIG.BASE_DIR).as_posix()
+
+                    tree_objects.append({
+                        "path": repo_path,
+                        "mode": "100644",
+                        "type": "blob",
+                        "sha": blob_sha
+                    })
+
+            if not tree_objects:
+                console.log("[yellow]No valid file objects to create a tree.[/yellow]")
+                return
+
+            new_tree_sha = await self.create_tree(latest_commit_sha, tree_objects)
+            new_commit_sha = await self.create_commit(new_tree_sha, latest_commit_sha, commit_message)
+            await self.update_branch_ref(new_commit_sha)
+            
+            console.log(f"[bold green]Successfully pushed commit '{new_commit_sha[:7]}' to GitHub.[/bold green]")
+
+        except GitHubError as e:
+            console.log(f"[bold red]Failed to update GitHub: {e}[/bold red]")
+        except Exception as e:
+            console.log(f"[bold red]An unexpected error occurred during GitHub update: {e}[/bold red]")
+
+
 class V2RayCollectorApp:
     def __init__(self):
         self.config = CONFIG
@@ -1042,6 +1146,20 @@ class V2RayCollectorApp:
         await self._save_results(all_unique_configs, categories, tg_scraper.configs_by_channel)
         await self._save_state()
         self._print_summary_report(processor, tg_scraper, sub_fetcher, self.start_time)
+        
+        if self.config.ENABLE_GITHUB_UPDATE:
+            if not all([self.config.GITHUB_USERNAME, self.config.GITHUB_REPO, self.config.GITHUB_TOKEN]):
+                console.log("[bold yellow]GitHub credentials not set in environment variables. Skipping GitHub update.[/bold yellow]")
+            else:
+                commit_message = f"feat: Update configs - {len(all_unique_configs)} total ({datetime.now(get_iran_timezone()).strftime('%Y-%m-%d %H:%M')})"
+                updater = GitHubUpdater(
+                    username=self.config.GITHUB_USERNAME,
+                    repo=self.config.GITHUB_REPO,
+                    token=self.config.GITHUB_TOKEN,
+                    branch=self.config.GITHUB_BRANCH
+                )
+                await updater.upload_files(commit_message)
+
         console.log("[bold green]Collection and processing complete.[/bold green]")
 
     async def _load_state(self):
