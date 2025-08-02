@@ -1,4 +1,5 @@
 httpx
+h2
 aiofiles
 jdatetime
 geoip2
