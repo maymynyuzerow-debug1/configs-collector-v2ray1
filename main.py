@@ -118,7 +118,7 @@ class NetworkError(V2RayCollectorException): pass
 class GitHubError(V2RayCollectorException): pass
 
 COUNTRY_CODE_TO_FLAG = {
-    'AD': '🇦🇩', 'AE': '🇦🇪', 'AF': '🇦🇫', 'AG': '🇦🇬', 'AI': '🇦🇮', 'AL': '🇦🇱', 'AM': '🇦🇲', 'AO': '🇦🇴', 'AQ': '🇦🇶', 'AR': '🇦🇷', 'AS': '🇦🇸', 'AT': '🇦🇹', 'AU': '🇦🇺', 'AW': '🇦🇼', 'AX': '🇦🇽', 'AZ': '🇦🇿', 'BA': '🇧🇦', 'BB': '🇧�',
+    'AD': '🇦🇩', 'AE': '🇦🇪', 'AF': '🇦🇫', 'AG': '🇦🇬', 'AI': '🇦🇮', 'AL': '🇦🇱', 'AM': '🇦🇲', 'AO': '🇦🇴', 'AQ': '🇦🇶', 'AR': '🇦🇷', 'AS': '🇦🇸', 'AT': '🇦🇹', 'AU': '🇦🇺', 'AW': '🇦🇼', 'AX': '🇦🇽', 'AZ': '🇦🇿', 'BA': '🇧🇦', 'BB': '🇧🇧',
     'BD': '🇧🇩', 'BE': '🇧🇪', 'BF': '🇧🇫', 'BG': '🇧🇬', 'BH': '🇧🇭', 'BI': '🇧🇮', 'BJ': '🇧🇯', 'BL': '🇧🇱', 'BM': '🇧🇲', 'BN': '🇧🇳', 'BO': '🇧🇴', 'BR': '🇧🇷', 'BS': '🇧🇸', 'BT': '🇧🇹', 'BW': '🇧🇼', 'BY': '🇧🇾', 'BZ': '🇧🇿', 'CA': '🇨🇦',
     'CC': '🇨🇨', 'CD': '🇨🇩', 'CF': '🇨🇫', 'CG': '🇨🇬', 'CH': '🇨🇭', 'CI': '🇨🇮', 'CK': '🇨🇰', 'CL': '🇨🇱', 'CM': '🇨🇲', 'CN': '🇨🇳', 'CO': '🇨🇴', 'CR': '🇨🇷', 'CU': '🇨🇺', 'CV': '🇨🇻', 'CW': '🇨🇼', 'CX': '🇨🇽', 'CY': '🇨🇾', 'CZ': '🇨🇿',
     'DE': '🇩🇪', 'DJ': '🇩🇯', 'DK': '🇩🇰', 'DM': '🇩🇲', 'DO': '🇩🇴', 'DZ': '🇩🇿', 'EC': '🇪🇨', 'EE': '🇪🇪', 'EG': '🇪🇬', 'ER': '🇪🇷', 'ES': '🇪🇸', 'ET': '🇪🇹', 'FI': '🇫🇮', 'FJ': '🇫🇯', 'FK': '🇫🇰', 'FM': '🇫🇲', 'FO': '🇫🇴', 'FR': '🇫🇷',
@@ -314,7 +314,8 @@ class AsyncHttpClient:
     async def get_client(cls) -> httpx.AsyncClient:
         if cls._client is None or cls._client.is_closed:
             limits = httpx.Limits(max_connections=CONFIG.MAX_CONCURRENT_REQUESTS, max_keepalive_connections=20)
-            cls._client = httpx.AsyncClient(headers=CONFIG.HTTP_HEADERS, timeout=CONFIG.HTTP_TIMEOUT, max_redirects=CONFIG.HTTP_MAX_REDIRECTS, http2=True, follow_redirects=True, limits=limits)
+            # The http2=True parameter is removed. httpx will automatically negotiate HTTP/2 if available.
+            cls._client = httpx.AsyncClient(headers=CONFIG.HTTP_HEADERS, timeout=CONFIG.HTTP_TIMEOUT, max_redirects=CONFIG.HTTP_MAX_REDIRECTS, follow_redirects=True, limits=limits)
         return cls._client
 
     @classmethod
@@ -627,12 +628,12 @@ class TelegramScraper:
 
     async def _scrape_channel_with_retry(self, channel: str, max_retries: int = 2) -> Optional[Dict[str, List[str]]]:
         url = CONFIG.TELEGRAM_BASE_URL.format(channel)
-        console.log(f"Scraping channel: {url}")
+        # console.log(f"Scraping channel: {url}") # This log is now removed for cleaner output
         for attempt in range(max_retries):
             try:
                 await asyncio.sleep(random.uniform(1.5, 3.0))
                 status, html = await AsyncHttpClient.get(url)
-                console.log(f"Channel '{channel}' response status: {status}")
+                # console.log(f"Channel '{channel}' response status: {status}") # This log is now removed for cleaner output
                 if status == 200 and html:
                     soup = BeautifulSoup(html, "html.parser")
                     messages = soup.find_all("div", class_="tgme_widget_message", limit=CONFIG.TELEGRAM_MESSAGE_LIMIT)
@@ -695,10 +696,10 @@ class SubscriptionFetcher:
                         self.total_configs_by_type[config_type].extend(configs)
 
     async def _fetch_and_decode(self, link: str) -> str:
-        console.log(f"Fetching subscription: {link[:100]}...")
+        # console.log(f"Fetching subscription: {link[:100]}...") # This log is now removed for cleaner output
         try:
             status, content = await AsyncHttpClient.get(link)
-            console.log(f"[green]Success (Status: {status}) fetching sub: {link[:100]}[/green]")
+            # console.log(f"[green]Success (Status: {status}) fetching sub: {link[:100]}[/green]") # This log is now removed for cleaner output
             try:
                 return base64.b64decode(content + '==').decode('utf-8')
             except Exception:
