@@ -95,8 +95,7 @@ class AppConfig:
     DEV_SIGNATURE = "💻 Collector v4.0 | Powered by eQnz"
     CUSTOM_SIGNATURE = "☕ Join Us | Telegram @eQnz_github"
     
-    # --- New GitHub Configuration ---
-    ENABLE_GITHUB_UPDATE = True # Set to True to enable pushing to GitHub
+    ENABLE_GITHUB_UPDATE = True
     GITHUB_USERNAME = os.getenv("GITHUB_USERNAME")
     GITHUB_REPO = os.getenv("GITHUB_REPO")
     GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
@@ -105,7 +104,6 @@ class AppConfig:
 CONFIG = AppConfig()
 console = Console()
 
-# ... (All previous classes and functions remain unchanged) ...
 def setup_logger():
     logging.basicConfig(level=logging.INFO, format='%(message)s', datefmt="[%X]", handlers=[])
     logging.getLogger("httpx").setLevel(logging.WARNING)
@@ -120,7 +118,7 @@ class NetworkError(V2RayCollectorException): pass
 class GitHubError(V2RayCollectorException): pass
 
 COUNTRY_CODE_TO_FLAG = {
-    'AD': '🇦🇩', 'AE': '🇦🇪', 'AF': '🇦🇫', 'AG': '🇦🇬', 'AI': '�🇮', 'AL': '🇦🇱', 'AM': '🇦🇲', 'AO': '🇦🇴', 'AQ': '🇦🇶', 'AR': '🇦🇷', 'AS': '🇦🇸', 'AT': '🇦🇹', 'AU': '🇦🇺', 'AW': '🇦🇼', 'AX': '🇦🇽', 'AZ': '🇦🇿', 'BA': '🇧🇦', 'BB': '🇧🇧',
+    'AD': '🇦🇩', 'AE': '🇦🇪', 'AF': '🇦🇫', 'AG': '🇦🇬', 'AI': '🇦🇮', 'AL': '🇦🇱', 'AM': '🇦🇲', 'AO': '🇦🇴', 'AQ': '🇦🇶', 'AR': '🇦🇷', 'AS': '🇦🇸', 'AT': '🇦🇹', 'AU': '🇦🇺', 'AW': '🇦🇼', 'AX': '🇦🇽', 'AZ': '🇦🇿', 'BA': '🇧🇦', 'BB': '🇧�',
     'BD': '🇧🇩', 'BE': '🇧🇪', 'BF': '🇧🇫', 'BG': '🇧🇬', 'BH': '🇧🇭', 'BI': '🇧🇮', 'BJ': '🇧🇯', 'BL': '🇧🇱', 'BM': '🇧🇲', 'BN': '🇧🇳', 'BO': '🇧🇴', 'BR': '🇧🇷', 'BS': '🇧🇸', 'BT': '🇧🇹', 'BW': '🇧🇼', 'BY': '🇧🇾', 'BZ': '🇧🇿', 'CA': '🇨🇦',
     'CC': '🇨🇨', 'CD': '🇨🇩', 'CF': '🇨🇫', 'CG': '🇨🇬', 'CH': '🇨🇭', 'CI': '🇨🇮', 'CK': '🇨🇰', 'CL': '🇨🇱', 'CM': '🇨🇲', 'CN': '🇨🇳', 'CO': '🇨🇴', 'CR': '🇨🇷', 'CU': '🇨🇺', 'CV': '🇨🇻', 'CW': '🇨🇼', 'CX': '🇨🇽', 'CY': '🇨🇾', 'CZ': '🇨🇿',
     'DE': '🇩🇪', 'DJ': '🇩🇯', 'DK': '🇩🇰', 'DM': '🇩🇲', 'DO': '🇩🇴', 'DZ': '🇩🇿', 'EC': '🇪🇨', 'EE': '🇪🇪', 'EG': '🇪🇬', 'ER': '🇪🇷', 'ES': '🇪🇸', 'ET': '🇪🇹', 'FI': '🇫🇮', 'FJ': '🇫🇯', 'FK': '🇫🇰', 'FM': '🇫🇲', 'FO': '🇫🇴', 'FR': '🇫🇷',
@@ -628,12 +626,13 @@ class TelegramScraper:
             pass
 
     async def _scrape_channel_with_retry(self, channel: str, max_retries: int = 2) -> Optional[Dict[str, List[str]]]:
+        url = CONFIG.TELEGRAM_BASE_URL.format(channel)
+        console.log(f"Scraping channel: {url}")
         for attempt in range(max_retries):
             try:
                 await asyncio.sleep(random.uniform(1.5, 3.0))
-                url = CONFIG.TELEGRAM_BASE_URL.format(channel)
-
                 status, html = await AsyncHttpClient.get(url)
+                console.log(f"Channel '{channel}' response status: {status}")
                 if status == 200 and html:
                     soup = BeautifulSoup(html, "html.parser")
                     messages = soup.find_all("div", class_="tgme_widget_message", limit=CONFIG.TELEGRAM_MESSAGE_LIMIT)
@@ -666,7 +665,8 @@ class TelegramScraper:
                                             break
                             except (ValueError, TypeError): continue
                     return channel_configs
-            except (NetworkError, Exception):
+            except (NetworkError, Exception) as e:
+                console.log(f"[bold red]Attempt {attempt + 1} failed for {channel}: {e}[/bold red]")
                 pass
             if attempt < max_retries - 1:
                 await asyncio.sleep((attempt + 1) * 5)
@@ -695,13 +695,16 @@ class SubscriptionFetcher:
                         self.total_configs_by_type[config_type].extend(configs)
 
     async def _fetch_and_decode(self, link: str) -> str:
+        console.log(f"Fetching subscription: {link[:100]}...")
         try:
-            _, content = await AsyncHttpClient.get(link)
+            status, content = await AsyncHttpClient.get(link)
+            console.log(f"[green]Success (Status: {status}) fetching sub: {link[:100]}[/green]")
             try:
                 return base64.b64decode(content + '==').decode('utf-8')
             except Exception:
                 return content
-        except Exception:
+        except Exception as e:
+            console.log(f"[bold red]Failed fetching sub {link[:100]}: {e}[/bold red]")
             return ""
 
 class FileManager:
