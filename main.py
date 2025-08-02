@@ -13,10 +13,13 @@ from typing import List, Dict, Set, Optional, Any, Tuple, Coroutine
 from urllib.parse import urlparse, parse_qs, unquote
 import ipaddress
 from collections import Counter
+from contextlib import asynccontextmanager
 
 import httpx
 import aiofiles
 import jdatetime
+from fastapi import FastAPI, HTTPException
+import uvicorn
 
 try:
     import geoip2.database
@@ -91,6 +94,12 @@ class AppConfig:
     DNT_SIGNATURE = "❤️ Daily config Updates | @DailyV2Config"
     DEV_SIGNATURE = "💻 Collector v4.0 | Powered by eQnz"
     CUSTOM_SIGNATURE = "☕ Join Us | Telegram @eQnz_github"
+    
+    ENABLE_GITHUB_UPDATE = True
+    GITHUB_USERNAME = os.getenv("GITHUB_USERNAME")
+    GITHUB_REPO = os.getenv("GITHUB_REPO")
+    GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+    GITHUB_BRANCH = "main"
 
 CONFIG = AppConfig()
 console = Console()
@@ -106,9 +115,10 @@ logger = setup_logger()
 class V2RayCollectorException(Exception): pass
 class ParsingError(V2RayCollectorException): pass
 class NetworkError(V2RayCollectorException): pass
+class GitHubError(V2RayCollectorException): pass
 
 COUNTRY_CODE_TO_FLAG = {
-    'AD': '🇦🇩', 'AE': '🇦🇪', 'AF': '🇦🇫', 'AG': '🇦🇬', 'AI': '🇦🇮', 'AL': '🇦🇱', 'AM': '🇦🇲', 'AO': '�🇴', 'AQ': '🇦🇶', 'AR': '🇦🇷', 'AS': '🇦🇸', 'AT': '🇦🇹', 'AU': '🇦🇺', 'AW': '🇦🇼', 'AX': '🇦🇽', 'AZ': '🇦🇿', 'BA': '🇧🇦', 'BB': '🇧🇧',
+    'AD': '🇦🇩', 'AE': '🇦🇪', 'AF': '🇦🇫', 'AG': '🇦🇬', 'AI': '🇦🇮', 'AL': '🇦🇱', 'AM': '🇦🇲', 'AO': '🇦🇴', 'AQ': '�🇶', 'AR': '🇦🇷', 'AS': '🇦🇸', 'AT': '🇦🇹', 'AU': '🇦🇺', 'AW': '🇦🇼', 'AX': '🇦🇽', 'AZ': '🇦🇿', 'BA': '🇧🇦', 'BB': '🇧🇧',
     'BD': '🇧🇩', 'BE': '🇧🇪', 'BF': '🇧🇫', 'BG': '🇧🇬', 'BH': '🇧🇭', 'BI': '🇧🇮', 'BJ': '🇧🇯', 'BL': '🇧🇱', 'BM': '🇧🇲', 'BN': '🇧🇳', 'BO': '🇧🇴', 'BR': '🇧🇷', 'BS': '🇧🇸', 'BT': '🇧🇹', 'BW': '🇧🇼', 'BY': '🇧🇾', 'BZ': '🇧🇿', 'CA': '🇨🇦',
     'CC': '🇨🇨', 'CD': '🇨🇩', 'CF': '🇨🇫', 'CG': '🇨🇬', 'CH': '🇨🇭', 'CI': '🇨🇮', 'CK': '🇨🇰', 'CL': '🇨🇱', 'CM': '🇨🇲', 'CN': '🇨🇳', 'CO': '🇨🇴', 'CR': '🇨🇷', 'CU': '🇨🇺', 'CV': '🇨🇻', 'CW': '🇨🇼', 'CX': '🇨🇽', 'CY': '🇨🇾', 'CZ': '🇨🇿',
     'DE': '🇩🇪', 'DJ': '🇩🇯', 'DK': '🇩🇰', 'DM': '🇩🇲', 'DO': '🇩🇴', 'DZ': '🇩🇿', 'EC': '🇪🇨', 'EE': '🇪🇪', 'EG': '🇪🇬', 'ER': '🇪🇷', 'ES': '🇪🇸', 'ET': '🇪🇹', 'FI': '🇫🇮', 'FJ': '🇫🇯', 'FK': '🇫🇰', 'FM': '🇫🇲', 'FO': '🇫🇴', 'FR': '🇫🇷',
@@ -617,12 +627,10 @@ class TelegramScraper:
 
     async def _scrape_channel_with_retry(self, channel: str, max_retries: int = 2) -> Optional[Dict[str, List[str]]]:
         url = CONFIG.TELEGRAM_BASE_URL.format(channel)
-        # console.log(f"Scraping channel: {url}") # This log is now removed for cleaner output
         for attempt in range(max_retries):
             try:
                 await asyncio.sleep(random.uniform(1.5, 3.0))
                 status, html = await AsyncHttpClient.get(url)
-                # console.log(f"Channel '{channel}' response status: {status}") # This log is now removed for cleaner output
                 if status == 200 and html:
                     soup = BeautifulSoup(html, "html.parser")
                     messages = soup.find_all("div", class_="tgme_widget_message", limit=CONFIG.TELEGRAM_MESSAGE_LIMIT)
@@ -685,10 +693,8 @@ class SubscriptionFetcher:
                         self.total_configs_by_type[config_type].extend(configs)
 
     async def _fetch_and_decode(self, link: str) -> str:
-        # console.log(f"Fetching subscription: {link[:100]}...") # This log is now removed for cleaner output
         try:
             status, content = await AsyncHttpClient.get(link)
-            # console.log(f"[green]Success (Status: {status}) fetching sub: {link[:100]}[/green]") # This log is now removed for cleaner output
             try:
                 return base64.b64decode(content + '==').decode('utf-8')
             except Exception:
@@ -995,101 +1001,6 @@ class ConfigProcessor:
                 
         return categories
 
-class GitHubUpdater:
-    def __init__(self, username: str, repo: str, token: str, branch: str = "main"):
-        self.username = username
-        self.repo = repo
-        self.branch = branch
-        self.api_url = f"https://api.github.com/repos/{username}/{repo}"
-        self.headers = {
-            "Authorization": f"token {token}",
-            "Accept": "application/vnd.github.v3+json"
-        }
-
-    async def _api_call(self, method: str, url: str, **kwargs) -> Dict[str, Any]:
-        async with httpx.AsyncClient() as client:
-            try:
-                response = await client.request(method, url, headers=self.headers, **kwargs)
-                response.raise_for_status()
-                return response.json()
-            except httpx.HTTPStatusError as e:
-                raise GitHubError(f"GitHub API error: {e.response.status_code} - {e.response.text}") from e
-            except httpx.RequestError as e:
-                raise GitHubError(f"Network error during GitHub API call: {e}") from e
-
-    async def get_latest_commit_sha(self) -> str:
-        url = f"{self.api_url}/git/ref/heads/{self.branch}"
-        data = await self._api_call("GET", url)
-        return data["object"]["sha"]
-
-    async def create_blob(self, content: str) -> str:
-        url = f"{self.api_url}/git/blobs"
-        payload = {"content": content, "encoding": "utf-8"}
-        data = await self._api_call("POST", url, json=payload)
-        return data["sha"]
-
-    async def create_tree(self, base_tree_sha: str, tree_objects: List[Dict]) -> str:
-        url = f"{self.api_url}/git/trees"
-        payload = {"base_tree": base_tree_sha, "tree": tree_objects}
-        data = await self._api_call("POST", url, json=payload)
-        return data["sha"]
-
-    async def create_commit(self, tree_sha: str, parent_commit_sha: str, message: str) -> str:
-        url = f"{self.api_url}/git/commits"
-        payload = {"message": message, "tree": tree_sha, "parents": [parent_commit_sha]}
-        data = await self._api_call("POST", url, json=payload)
-        return data["sha"]
-
-    async def update_branch_ref(self, commit_sha: str):
-        url = f"{self.api_url}/git/refs/heads/{self.branch}"
-        payload = {"sha": commit_sha}
-        await self._api_call("PATCH", url, json=payload)
-
-    async def upload_files(self, commit_message: str):
-        console.log("[bold cyan]Starting GitHub update process...[/bold cyan]")
-        try:
-            latest_commit_sha = await self.get_latest_commit_sha()
-            
-            tree_objects = []
-            files_to_upload = list(CONFIG.OUTPUT_DIR.rglob("*.*"))
-            
-            if not files_to_upload:
-                console.log("[yellow]No files found in 'sub' directory to upload.[/yellow]")
-                return
-
-            console.log(f"Found {len(files_to_upload)} files to upload.")
-
-            for file_path in files_to_upload:
-                if file_path.is_file():
-                    async with aiofiles.open(file_path, 'r', encoding='utf-8') as f:
-                        content = await f.read()
-                    
-                    blob_sha = await self.create_blob(content)
-                    repo_path = file_path.relative_to(CONFIG.BASE_DIR).as_posix()
-
-                    tree_objects.append({
-                        "path": repo_path,
-                        "mode": "100644",
-                        "type": "blob",
-                        "sha": blob_sha
-                    })
-
-            if not tree_objects:
-                console.log("[yellow]No valid file objects to create a tree.[/yellow]")
-                return
-
-            new_tree_sha = await self.create_tree(latest_commit_sha, tree_objects)
-            new_commit_sha = await self.create_commit(new_tree_sha, latest_commit_sha, commit_message)
-            await self.update_branch_ref(new_commit_sha)
-            
-            console.log(f"[bold green]Successfully pushed commit '{new_commit_sha[:7]}' to GitHub.[/bold green]")
-
-        except GitHubError as e:
-            console.log(f"[bold red]Failed to update GitHub: {e}[/bold red]")
-        except Exception as e:
-            console.log(f"[bold red]An unexpected error occurred during GitHub update: {e}[/bold red]")
-
-
 class V2RayCollectorApp:
     def __init__(self):
         self.config = CONFIG
@@ -1140,19 +1051,6 @@ class V2RayCollectorApp:
         await self._save_state()
         self._print_summary_report(processor, tg_scraper, sub_fetcher, self.start_time)
         
-        if self.config.ENABLE_GITHUB_UPDATE:
-            if not all([self.config.GITHUB_USERNAME, self.config.GITHUB_REPO, self.config.GITHUB_TOKEN]):
-                console.log("[bold yellow]GitHub credentials not set in environment variables. Skipping GitHub update.[/bold yellow]")
-            else:
-                commit_message = f"feat: Update configs - {len(all_unique_configs)} total ({datetime.now(get_iran_timezone()).strftime('%Y-%m-%d %H:%M')})"
-                updater = GitHubUpdater(
-                    username=self.config.GITHUB_USERNAME,
-                    repo=self.config.GITHUB_REPO,
-                    token=self.config.GITHUB_TOKEN,
-                    branch=self.config.GITHUB_BRANCH
-                )
-                await updater.upload_files(commit_message)
-
         console.log("[bold green]Collection and processing complete.[/bold green]")
 
     async def _load_state(self):
@@ -1291,7 +1189,7 @@ class V2RayCollectorApp:
         console.print(country_table)
         console.print(asn_table)
         
-        commit_message = f"feat: Update configs - {len(all_configs)} total"
+        commit_message = f"feat: Update configs - {len(all_unique_configs)} total"
         console.print(Panel(f"[bold cyan]{commit_message}[/bold cyan]", title="💡 Suggested Commit Message", border_style="yellow"))
 
 async def _download_db_if_needed(url: str, file_path: Path):
@@ -1321,50 +1219,29 @@ async def _setup_data_file(remote_url: str, local_path: Path):
             console.log(f"[bold red]Failed to create {local_path.name} from {remote_url}: {e}[/bold red]")
 
 
-is_running = False
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    console.log("[bold green]Application starting up...[/bold green]")
+async def main():
     CONFIG.DATA_DIR.mkdir(exist_ok=True)
+
     await _download_db_if_needed(CONFIG.GEOIP_DB_URL, CONFIG.GEOIP_DB_FILE)
     await _download_db_if_needed(CONFIG.GEOIP_ASN_DB_URL, CONFIG.GEOIP_ASN_DB_FILE)
+
     await _setup_data_file(CONFIG.REMOTE_CHANNELS_URL, CONFIG.TELEGRAM_CHANNELS_FILE)
     await _setup_data_file(CONFIG.REMOTE_SUBS_URL, CONFIG.SUBSCRIPTION_LINKS_FILE)
+
     Geolocation.initialize()
-    console.log("[bold green]Startup complete. Application is ready.[/bold green]")
-    
-    yield
-    
-    console.log("[bold red]Application shutting down...[/bold red]")
-    await AsyncHttpClient.close()
-    Geolocation.close()
-    console.log("[bold red]Shutdown complete.[/bold red]")
 
-
-app = FastAPI(lifespan=lifespan)
-
-@app.get("/")
-async def root():
-    return {"message": "V2Ray Collector is running. Use the /run endpoint to trigger the collection process."}
-
-@app.get("/run")
-async def trigger_run():
-    global is_running
-    if is_running:
-        console.log("[bold yellow]A collection process is already running. New request rejected.[/bold yellow]")
-        raise HTTPException(status_code=429, detail="A collection process is already running. Please wait for it to finish.")
-
-    is_running = True
+    app = V2RayCollectorApp()
     try:
-        console.log("[bold magenta]Starting V2Ray Collector App run via API trigger...[/bold magenta]")
-        collector_app = V2RayCollectorApp()
-        await collector_app.run()
-        console.log("[bold magenta]V2Ray Collector App run finished successfully.[/bold magenta]")
-        return {"status": "success", "message": "Collection and processing complete."}
+        await app.run()
+    except KeyboardInterrupt:
+        console.log("\n[yellow]Application interrupted by user.[/yellow]")
     except Exception as e:
-        console.log(f"\n[bold red]An unhandled exception occurred during API triggered run: {e}[/bold red]")
+        console.log(f"\n[bold red]An unhandled exception occurred: {e}[/bold red]")
         console.print_exception()
-        raise HTTPException(status_code=500, detail=f"An internal error occurred: {str(e)}")
     finally:
-        is_running = False
+        await AsyncHttpClient.close()
+        Geolocation.close()
+        console.rule("[bold green]Shutdown complete.[/bold green]")
+
+if __name__ == "__main__":
+    asyncio.run(main())
