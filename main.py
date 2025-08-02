@@ -13,10 +13,13 @@ from typing import List, Dict, Set, Optional, Any, Tuple, Coroutine
 from urllib.parse import urlparse, parse_qs, unquote
 import ipaddress
 from collections import Counter
+from contextlib import asynccontextmanager
 
 import httpx
 import aiofiles
 import jdatetime
+from fastapi import FastAPI, HTTPException
+import uvicorn
 
 try:
     import geoip2.database
@@ -112,7 +115,7 @@ COUNTRY_CODE_TO_FLAG = {
     'BD': '🇧🇩', 'BE': '🇧🇪', 'BF': '🇧🇫', 'BG': '🇧🇬', 'BH': '🇧🇭', 'BI': '🇧🇮', 'BJ': '🇧🇯', 'BL': '🇧🇱', 'BM': '🇧🇲', 'BN': '🇧🇳', 'BO': '🇧🇴', 'BR': '🇧🇷', 'BS': '🇧🇸', 'BT': '🇧🇹', 'BW': '🇧🇼', 'BY': '🇧🇾', 'BZ': '🇧🇿', 'CA': '🇨🇦',
     'CC': '🇨🇨', 'CD': '🇨🇩', 'CF': '🇨🇫', 'CG': '🇨🇬', 'CH': '🇨🇭', 'CI': '🇨🇮', 'CK': '🇨🇰', 'CL': '🇨🇱', 'CM': '🇨🇲', 'CN': '🇨🇳', 'CO': '🇨🇴', 'CR': '🇨🇷', 'CU': '🇨🇺', 'CV': '🇨🇻', 'CW': '🇨🇼', 'CX': '🇨🇽', 'CY': '🇨🇾', 'CZ': '🇨🇿',
     'DE': '🇩🇪', 'DJ': '🇩🇯', 'DK': '🇩🇰', 'DM': '🇩🇲', 'DO': '🇩🇴', 'DZ': '🇩🇿', 'EC': '🇪🇨', 'EE': '🇪🇪', 'EG': '🇪🇬', 'ER': '🇪🇷', 'ES': '🇪🇸', 'ET': '🇪🇹', 'FI': '🇫🇮', 'FJ': '🇫🇯', 'FK': '🇫🇰', 'FM': '🇫🇲', 'FO': '🇫🇴', 'FR': '🇫🇷',
-    'GA': '🇬🇦', 'GB': '🇬🇧', 'GD': '🇬🇩', 'GE': '🇬🇪', 'GF': '🇬🇫', 'GG': '🇬🇬', 'GH': '🇬🇭', 'GI': '🇬🇮', 'GL': '🇬🇱', 'GM': '🇬🇲', 'GN': '🇬🇳', 'GP': '🇬🇵', 'GQ': '🇬🇶', 'GR': '🇬🇷', 'GS': '🇬🇸', 'GT': '🇬🇹', 'GU': '🇬🇺', 'GW': '🇬🇼',
+    'GA': '🇬🇦', 'GB': '🇬🇧', 'GD': '�🇩', 'GE': '🇬🇪', 'GF': '🇬🇫', 'GG': '🇬🇬', 'GH': '🇬🇭', 'GI': '🇬🇮', 'GL': '🇬🇱', 'GM': '🇬🇲', 'GN': '🇬🇳', 'GP': '🇬🇵', 'GQ': '🇬🇶', 'GR': '🇬🇷', 'GS': '🇬🇸', 'GT': '🇬🇹', 'GU': '🇬🇺', 'GW': '🇬🇼',
     'GY': '🇬🇾', 'HK': '🇭🇰', 'HN': '🇭🇳', 'HR': '🇭🇷', 'HT': '🇭🇹', 'HU': '🇭🇺', 'ID': '🇮🇩', 'IE': '🇮🇪', 'IL': '🇮🇱', 'IM': '🇮🇲', 'IN': '🇮🇳', 'IO': '🇮🇴', 'IQ': '🇮🇶', 'IR': '🇮🇷', 'IS': '🇮🇸', 'IT': '🇮🇹', 'JE': '🇯🇪', 'JM': '🇯🇲',
     'JO': '🇯🇴', 'JP': '🇯🇵', 'KE': '🇰🇪', 'KG': '🇰🇬', 'KH': '🇰🇭', 'KI': '🇰🇮', 'KM': '🇰🇲', 'KN': '🇰🇳', 'KP': '🇰🇵', 'KR': '🇰🇷', 'KW': '🇰🇼', 'KY': '🇰🇾', 'KZ': '🇰🇿', 'LA': '🇱🇦', 'LB': '🇱🇧', 'LC': '🇱🇨', 'LI': '🇱🇮', 'LK': '🇱🇰',
     'LR': '🇱🇷', 'LS': '🇱🇸', 'LT': '🇱🇹', 'LU': '🇱🇺', 'LV': '🇱🇻', 'LY': '🇱🇾', 'MA': '🇲🇦', 'MC': '🇲🇨', 'MD': '🇲🇩', 'ME': '🇲🇪', 'MF': '🇲🇫', 'MG': '🇲🇬', 'MH': '🇲🇭', 'MK': '🇲🇰', 'ML': '🇲🇱', 'MM': '🇲🇲', 'MN': '🇲🇳', 'MO': '🇲🇴',
@@ -1206,29 +1209,51 @@ async def _setup_data_file(remote_url: str, local_path: Path):
         except Exception as e:
             console.log(f"[bold red]Failed to create {local_path.name} from {remote_url}: {e}[/bold red]")
 
-async def main():
-    CONFIG.DATA_DIR.mkdir(exist_ok=True)
 
+is_running = False
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    console.log("[bold green]Application starting up...[/bold green]")
+    CONFIG.DATA_DIR.mkdir(exist_ok=True)
     await _download_db_if_needed(CONFIG.GEOIP_DB_URL, CONFIG.GEOIP_DB_FILE)
     await _download_db_if_needed(CONFIG.GEOIP_ASN_DB_URL, CONFIG.GEOIP_ASN_DB_FILE)
-
     await _setup_data_file(CONFIG.REMOTE_CHANNELS_URL, CONFIG.TELEGRAM_CHANNELS_FILE)
     await _setup_data_file(CONFIG.REMOTE_SUBS_URL, CONFIG.SUBSCRIPTION_LINKS_FILE)
-
     Geolocation.initialize()
+    console.log("[bold green]Startup complete. Application is ready.[/bold green]")
+    
+    yield
+    
+    console.log("[bold red]Application shutting down...[/bold red]")
+    await AsyncHttpClient.close()
+    Geolocation.close()
+    console.log("[bold red]Shutdown complete.[/bold red]")
 
-    app = V2RayCollectorApp()
+
+app = FastAPI(lifespan=lifespan)
+
+@app.get("/")
+async def root():
+    return {"message": "V2Ray Collector is running. Use the /run endpoint to trigger the collection process."}
+
+@app.get("/run")
+async def trigger_run():
+    global is_running
+    if is_running:
+        console.log("[bold yellow]A collection process is already running. New request rejected.[/bold yellow]")
+        raise HTTPException(status_code=429, detail="A collection process is already running. Please wait for it to finish.")
+
+    is_running = True
     try:
-        await app.run()
-    except KeyboardInterrupt:
-        console.log("\n[yellow]Application interrupted by user.[/yellow]")
+        console.log("[bold magenta]Starting V2Ray Collector App run via API trigger...[/bold magenta]")
+        collector_app = V2RayCollectorApp()
+        await collector_app.run()
+        console.log("[bold magenta]V2Ray Collector App run finished successfully.[/bold magenta]")
+        return {"status": "success", "message": "Collection and processing complete."}
     except Exception as e:
-        console.log(f"\n[bold red]An unhandled exception occurred: {e}[/bold red]")
+        console.log(f"\n[bold red]An unhandled exception occurred during API triggered run: {e}[/bold red]")
         console.print_exception()
+        raise HTTPException(status_code=500, detail=f"An internal error occurred: {str(e)}")
     finally:
-        await AsyncHttpClient.close()
-        Geolocation.close()
-        console.rule("[bold green]Shutdown complete.[/bold green]")
-
-if __name__ == "__main__":
-    asyncio.run(main())
+        is_running = False
