@@ -13,13 +13,10 @@ from typing import List, Dict, Set, Optional, Any, Tuple, Coroutine
 from urllib.parse import urlparse, parse_qs, unquote
 import ipaddress
 from collections import Counter
-from contextlib import asynccontextmanager
 
 import httpx
 import aiofiles
 import jdatetime
-from fastapi import FastAPI, HTTPException
-import uvicorn
 
 try:
     import geoip2.database
@@ -94,12 +91,6 @@ class AppConfig:
     DNT_SIGNATURE = "❤️ Daily config Updates | @DailyV2Config"
     DEV_SIGNATURE = "💻 Collector v4.0 | Powered by eQnz"
     CUSTOM_SIGNATURE = "☕ Join Us | Telegram @eQnz_github"
-    
-    ENABLE_GITHUB_UPDATE = True
-    GITHUB_USERNAME = os.getenv("GITHUB_USERNAME")
-    GITHUB_REPO = os.getenv("GITHUB_REPO")
-    GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
-    GITHUB_BRANCH = "main"
 
 CONFIG = AppConfig()
 console = Console()
@@ -115,10 +106,9 @@ logger = setup_logger()
 class V2RayCollectorException(Exception): pass
 class ParsingError(V2RayCollectorException): pass
 class NetworkError(V2RayCollectorException): pass
-class GitHubError(V2RayCollectorException): pass
 
 COUNTRY_CODE_TO_FLAG = {
-    'AD': '🇦🇩', 'AE': '🇦🇪', 'AF': '🇦🇫', 'AG': '🇦🇬', 'AI': '🇦🇮', 'AL': '🇦🇱', 'AM': '🇦🇲', 'AO': '🇦🇴', 'AQ': '🇦🇶', 'AR': '🇦🇷', 'AS': '🇦🇸', 'AT': '🇦🇹', 'AU': '🇦🇺', 'AW': '🇦🇼', 'AX': '🇦🇽', 'AZ': '🇦🇿', 'BA': '🇧🇦', 'BB': '🇧🇧',
+    'AD': '🇦🇩', 'AE': '🇦🇪', 'AF': '🇦🇫', 'AG': '🇦🇬', 'AI': '🇦🇮', 'AL': '🇦🇱', 'AM': '🇦🇲', 'AO': '�🇴', 'AQ': '🇦🇶', 'AR': '🇦🇷', 'AS': '🇦🇸', 'AT': '🇦🇹', 'AU': '🇦🇺', 'AW': '🇦🇼', 'AX': '🇦🇽', 'AZ': '🇦🇿', 'BA': '🇧🇦', 'BB': '🇧🇧',
     'BD': '🇧🇩', 'BE': '🇧🇪', 'BF': '🇧🇫', 'BG': '🇧🇬', 'BH': '🇧🇭', 'BI': '🇧🇮', 'BJ': '🇧🇯', 'BL': '🇧🇱', 'BM': '🇧🇲', 'BN': '🇧🇳', 'BO': '🇧🇴', 'BR': '🇧🇷', 'BS': '🇧🇸', 'BT': '🇧🇹', 'BW': '🇧🇼', 'BY': '🇧🇾', 'BZ': '🇧🇿', 'CA': '🇨🇦',
     'CC': '🇨🇨', 'CD': '🇨🇩', 'CF': '🇨🇫', 'CG': '🇨🇬', 'CH': '🇨🇭', 'CI': '🇨🇮', 'CK': '🇨🇰', 'CL': '🇨🇱', 'CM': '🇨🇲', 'CN': '🇨🇳', 'CO': '🇨🇴', 'CR': '🇨🇷', 'CU': '🇨🇺', 'CV': '🇨🇻', 'CW': '🇨🇼', 'CX': '🇨🇽', 'CY': '🇨🇾', 'CZ': '🇨🇿',
     'DE': '🇩🇪', 'DJ': '🇩🇯', 'DK': '🇩🇰', 'DM': '🇩🇲', 'DO': '🇩🇴', 'DZ': '🇩🇿', 'EC': '🇪🇨', 'EE': '🇪🇪', 'EG': '🇪🇬', 'ER': '🇪🇷', 'ES': '🇪🇸', 'ET': '🇪🇹', 'FI': '🇫🇮', 'FJ': '🇫🇯', 'FK': '🇫🇰', 'FM': '🇫🇲', 'FO': '🇫🇴', 'FR': '🇫🇷',
@@ -314,7 +304,6 @@ class AsyncHttpClient:
     async def get_client(cls) -> httpx.AsyncClient:
         if cls._client is None or cls._client.is_closed:
             limits = httpx.Limits(max_connections=CONFIG.MAX_CONCURRENT_REQUESTS, max_keepalive_connections=20)
-            # The http2=True parameter is removed. httpx will automatically negotiate HTTP/2 if available.
             cls._client = httpx.AsyncClient(headers=CONFIG.HTTP_HEADERS, timeout=CONFIG.HTTP_TIMEOUT, max_redirects=CONFIG.HTTP_MAX_REDIRECTS, follow_redirects=True, limits=limits)
         return cls._client
 
