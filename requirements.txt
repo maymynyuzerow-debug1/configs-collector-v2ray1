@@ -1,0 +1,9 @@
+httpx
+aiofiles
+jdatetime
+geoip2
+rich
+beautifulsoup4
+pydantic
+fastapi
+uvicorn
