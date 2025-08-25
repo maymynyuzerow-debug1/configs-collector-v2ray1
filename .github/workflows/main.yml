@@ -23,7 +23,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install beautifulsoup4 pydantic jdatetime aiofiles rich  # Убраны лишние зависимости
+          pip install httpx beautifulsoup4 pydantic jdatetime aiofiles rich  # Убраны лишние зависимости
 
       - name: Run script
         run: |
