@@ -2,7 +2,7 @@ name: V2Ray Config Collector
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Запускать раз в час
+    - cron: '0 */6 * * *'  # Запуск каждые 6 часов
   workflow_dispatch:
 
 permissions:
