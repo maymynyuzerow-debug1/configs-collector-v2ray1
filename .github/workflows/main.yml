@@ -2,7 +2,7 @@ name: V2Ray Config Collector
 
 on:
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: '0 * * * *'  # Запускать раз в час
   workflow_dispatch:
 
 permissions:
@@ -23,7 +23,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install httpx[http2] beautifulsoup4 pydantic jdatetime aiofiles geoip2 rich
+          pip install beautifulsoup4 pydantic jdatetime aiofiles rich  # Убраны лишние зависимости
 
       - name: Run script
         run: |
@@ -36,7 +36,7 @@ jobs:
           git add -A
           if ! git diff --staged --quiet; then
             git commit -m "🔄 Update V2Ray configs on $(TZ='Asia/Tehran' date)"
-            git push --force
+            git push
           else
             echo "No changes to commit."
           fi
