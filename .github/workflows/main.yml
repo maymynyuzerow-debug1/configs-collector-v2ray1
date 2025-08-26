@@ -36,6 +36,7 @@ jobs:
           git add -A
           if ! git diff --staged --quiet; then
             git commit -m "🔄 Update V2Ray configs on $(TZ='Asia/Tehran' date)"
+            git pull --rebase
             git push
           else
             echo "No changes to commit."
