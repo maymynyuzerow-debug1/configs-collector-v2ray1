@@ -28,7 +28,6 @@ try:
     from rich.console import Console
     from rich.progress import Progress, BarColumn, TextColumn, TimeRemainingColumn, SpinnerColumn
     from rich.table import Table
-    from rich.panel import Panel
 except ImportError:
     print("Error: 'rich' library not found. Please run: pip install rich")
     exit(1)
@@ -49,7 +48,9 @@ class AppConfig:
         "networks": OUTPUT_DIR / "networks",
         "subscribe": OUTPUT_DIR / "subscribe",
         "countries": OUTPUT_DIR / "countries",
+        "datacenters": OUTPUT_DIR / "datacenters",
         "mix_protocol": OUTPUT_DIR / "mix_protocol",
+        "tested_configs": OUTPUT_DIR / "tested_configs",
     }
 
     TELEGRAM_CHANNELS_FILE = DATA_DIR / "telegram_channels.json"
@@ -61,7 +62,6 @@ class AppConfig:
     GEOIP_ASN_DB_FILE = DATA_DIR / "GeoLite2-ASN.mmdb"
 
     REMOTE_CHANNELS_URL = "https://raw.githubusercontent.com/PlanAsli/configs-collector-v2ray/main/data/telegram-channel.json"
-    REMOTE_SUBS_URL = "https://raw.githubusercontent.com/PlanAsli/configs-collector-v2ray/refs/heads/main/data/sub_link.json"
     GEOIP_DB_URL = "https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-Country.mmdb"
     GEOIP_ASN_DB_URL = "https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-ASN.mmdb"
 
@@ -73,22 +73,22 @@ class AppConfig:
     TELEGRAM_BASE_URL = "https://t.me/s/{}"
     TELEGRAM_MESSAGE_LIMIT = 50
     TELEGRAM_IGNORE_LAST_UPDATE = True
-    MAX_CONFIGS_PER_CHANNEL = 400
+    MAX_CONFIGS_PER_CHANNEL = 70 
 
     ENABLE_SUBSCRIPTION_FETCHING = True
     ENABLE_IP_DEDUPLICATION = True
     ENABLE_SEEN_CONFIG_FILTER = False
     SEEN_CONFIG_TIMEOUT_HOURS = 1
-
-    ENABLE_CONNECTIVITY_TEST = False
+    
+    ENABLE_CONNECTIVITY_TEST = True 
     CONNECTIVITY_TEST_TIMEOUT = 4
     MAX_CONNECTIVITY_TESTS = 250
 
     ADD_SIGNATURES = True
-    ADV_SIGNATURE = "✨ Free Internet For All | @DailyV2Config"
-    DNT_SIGNATURE = "❤️ Daily config Updates | @DailyV2Config"
-    DEV_SIGNATURE = "💻 Collector v4.0 | Powered by eQnz"
-    CUSTOM_SIGNATURE = "☕ Join Us | Telegram @eQnz_github"
+    ADV_SIGNATURE = "「 ✨ Free Internet For All 」 @OXNET_IR"
+    DNT_SIGNATURE = "❤️ Your Daily Dose of Proxies @OXNET_IR"
+    DEV_SIGNATURE = "</> Collector v6.0.0"
+    CUSTOM_SIGNATURE = "「 PlanAsli ☕ 」"
 
 CONFIG = AppConfig()
 console = Console()
@@ -106,7 +106,7 @@ class ParsingError(V2RayCollectorException): pass
 class NetworkError(V2RayCollectorException): pass
 
 COUNTRY_CODE_TO_FLAG = {
-    'AD': '🇦🇩', 'AE': '🇦🇪', 'AF': '🇦🇫', 'AG': '🇦🇬', 'AI': '🇦🇮', 'AL': '🇦�', 'AM': '🇦🇲', 'AO': '🇦🇴', 'AQ': '🇦🇶', 'AR': '🇦🇷', 'AS': '🇦🇸', 'AT': '🇦🇹', 'AU': '🇦🇺', 'AW': '🇦🇼', 'AX': '🇦🇽', 'AZ': '🇦🇿', 'BA': '🇧🇦', 'BB': '🇧🇧',
+    'AD': '🇦🇩', 'AE': '🇦🇪', 'AF': '🇦🇫', 'AG': '🇦🇬', 'AI': '🇦🇮', 'AL': '🇦🇱', 'AM': '🇦🇲', 'AO': '🇦🇴', 'AQ': '🇦🇶', 'AR': '🇦🇷', 'AS': '🇦🇸', 'AT': '🇦🇹', 'AU': '🇦🇺', 'AW': '🇦🇼', 'AX': '🇦🇽', 'AZ': '🇦🇿', 'BA': '🇧🇦', 'BB': '🇧🇧',
     'BD': '🇧🇩', 'BE': '🇧🇪', 'BF': '🇧🇫', 'BG': '🇧🇬', 'BH': '🇧🇭', 'BI': '🇧🇮', 'BJ': '🇧🇯', 'BL': '🇧🇱', 'BM': '🇧🇲', 'BN': '🇧🇳', 'BO': '🇧🇴', 'BR': '🇧🇷', 'BS': '🇧🇸', 'BT': '🇧🇹', 'BW': '🇧🇼', 'BY': '🇧🇾', 'BZ': '🇧🇿', 'CA': '🇨🇦',
     'CC': '🇨🇨', 'CD': '🇨🇩', 'CF': '🇨🇫', 'CG': '🇨🇬', 'CH': '🇨🇭', 'CI': '🇨🇮', 'CK': '🇨🇰', 'CL': '🇨🇱', 'CM': '🇨🇲', 'CN': '🇨🇳', 'CO': '🇨🇴', 'CR': '🇨🇷', 'CU': '🇨🇺', 'CV': '🇨🇻', 'CW': '🇨🇼', 'CX': '🇨🇽', 'CY': '🇨🇾', 'CZ': '🇨🇿',
     'DE': '🇩🇪', 'DJ': '🇩🇯', 'DK': '🇩🇰', 'DM': '🇩🇲', 'DO': '🇩🇴', 'DZ': '🇩🇿', 'EC': '🇪🇨', 'EE': '🇪🇪', 'EG': '🇪🇬', 'ER': '🇪🇷', 'ES': '🇪🇸', 'ET': '🇪🇹', 'FI': '🇫🇮', 'FJ': '🇫🇯', 'FK': '🇫🇰', 'FM': '🇫🇲', 'FO': '🇫🇴', 'FR': '🇫🇷',
@@ -121,13 +121,6 @@ COUNTRY_CODE_TO_FLAG = {
     'TL': '🇹🇱', 'TM': '🇹🇲', 'TN': '🇹🇳', 'TO': '🇹🇴', 'TR': '🇹🇷', 'TT': '🇹🇹', 'TV': '🇹🇻', 'TW': '🇹🇼', 'TZ': '🇹🇿', 'UA': '🇺🇦', 'UG': '🇺🇬', 'US': '🇺🇸', 'UY': '🇺🇾', 'UZ': '🇺🇿', 'VA': '🇻🇦', 'VC': '🇻🇨', 'VE': '🇻🇪', 'VG': '🇻🇬',
     'VI': '🇻🇮', 'VN': '🇻🇳', 'VU': '🇻🇺', 'WF': '🇼🇫', 'WS': '🇼🇸', 'YE': '🇾🇪', 'YT': '🇾🇹', 'ZA': '🇿🇦', 'ZM': '🇿🇲', 'ZW': '🇿🇼', 'XX': '🏳️'
 }
-
-def b64_decode(s: str) -> str:
-    s += '=' * (-len(s) % 4)
-    return base64.urlsafe_b64decode(s).decode('utf-8')
-
-def b64_encode(s: str) -> str:
-    return base64.urlsafe_b64encode(s.encode('utf-8')).rstrip(b'=').decode('utf-8')
 
 def is_valid_base64(s: str) -> bool:
     try:
@@ -264,37 +257,6 @@ class TuicConfig(BaseConfig):
         remarks_encoded = f"#{unquote(self.remarks)}"
         return f"tuic://{self.uuid}:{self.password}@{self.host}:{self.port}?{query_string}{remarks_encoded}"
 
-class ShadowsocksRConfig(BaseConfig):
-    protocol: str = 'shadowsocksr'
-    source_type: str = 'shadowsocksr'
-    method: str
-    obfs: str
-    protocol_param: Optional[str] = Field(None, alias='protoparam')
-    obfs_param: Optional[str] = Field(None, alias='obfsparam')
-
-    def to_uri(self) -> str:
-        main_part = f"{self.host}:{self.port}:{self.protocol}:{self.method}:{self.obfs}:{b64_encode(self.uuid)}"
-        params = {'obfsparam': self.obfs_param, 'protoparam': self.protocol_param, 'remarks': b64_encode(self.remarks)}
-        query_string = '&'.join([f"{k}={v}" for k, v in params.items() if v])
-        return f"ssr://{b64_encode(f'{main_part}/?{query_string}')}"
-
-class WireGuardConfig(BaseConfig):
-    protocol: str = 'wireguard'
-    source_type: str = 'wireguard'
-    private_key: Optional[str] = None
-    public_key: Optional[str] = None
-    preshared_key: Optional[str] = None
-    ip: Optional[str] = None
-
-    def to_uri(self) -> str:
-        params = {'public_key': self.public_key, 'preshared_key': self.preshared_key, 'ip': self.ip}
-        query_string = '&'.join([f"{k}={v}" for k, v in params.items() if v])
-        remarks_encoded = f"#{unquote(self.remarks)}"
-        if self.private_key:
-            return f"wg://{self.private_key}@{self.host}:{self.port}?{query_string}{remarks_encoded}"
-        else:
-            return f"warp://{self.host}:{self.port}?{query_string}{remarks_encoded}"
-
 class AsyncHttpClient:
     _client: Optional[httpx.AsyncClient] = None
 
@@ -329,7 +291,7 @@ class V2RayParser:
         uri = uri.strip()
         if not uri:
             return None
-
+            
         parsed_config: Optional[BaseConfig] = None
         try:
             if uri.startswith("vmess://"): parsed_config = V2RayParser._parse_vmess(uri)
@@ -338,8 +300,6 @@ class V2RayParser:
             elif uri.startswith("ss://"): parsed_config = V2RayParser._parse_shadowsocks(uri)
             elif uri.startswith("hy2://") or uri.startswith("hysteria2://"): parsed_config = V2RayParser._parse_hysteria2(uri)
             elif uri.startswith("tuic://"): parsed_config = V2RayParser._parse_tuic(uri)
-            elif uri.startswith("ssr://"): parsed_config = V2RayParser._parse_shadowsocksr(uri)
-            elif uri.startswith("wg://") or uri.startswith("warp://"): parsed_config = V2RayParser._parse_wireguard(uri)
 
             if parsed_config:
                 parsed_config.source_type = source_type
@@ -365,17 +325,17 @@ class V2RayParser:
 
             params = parse_qs(parsed_url.query)
             return VlessConfig(
-                uuid=parsed_url.username,
-                host=parsed_url.hostname,
-                port=parsed_url.port,
+                uuid=parsed_url.username, 
+                host=parsed_url.hostname, 
+                port=parsed_url.port, 
                 remarks=unquote(parsed_url.fragment) if parsed_url.fragment else f"{parsed_url.hostname}:{parsed_url.port}",
-                network=params.get('type', ['tcp'])[0],
-                security=params.get('security', ['none'])[0],
-                path=unquote(params.get('path', [None])[0]) if params.get('path') else None,
-                sni=params.get('sni', [None])[0],
-                fingerprint=params.get('fp', [None])[0],
-                flow=params.get('flow', [None])[0],
-                pbk=params.get('pbk', [None])[0],
+                network=params.get('type', ['tcp'])[0], 
+                security=params.get('security', ['none'])[0], 
+                path=unquote(params.get('path', [None])[0]) if params.get('path') else None, 
+                sni=params.get('sni', [None])[0], 
+                fingerprint=params.get('fp', [None])[0], 
+                flow=params.get('flow', [None])[0], 
+                pbk=params.get('pbk', [None])[0], 
                 sid=params.get('sid', [None])[0]
             )
         except (ValueError, TypeError, AttributeError) as e:
@@ -394,26 +354,26 @@ class V2RayParser:
         try:
             main_part, remarks_part = (uri[len("ss://"):].split('#', 1) + [''])[:2]
             remarks = unquote(remarks_part) if remarks_part else ''
-
+            
             if '@' not in main_part:
                 raise ParsingError("Invalid SS URI format: missing '@'.")
-
+                
             user_info_part, host_port_part = main_part.split('@', 1)
             decoded_user_info = base64.b64decode(user_info_part + '==').decode('utf-8')
-
+            
             if ':' not in decoded_user_info or ':' not in host_port_part:
                 raise ParsingError("Invalid SS URI format: missing method/password or host/port separator.")
-
+                
             method, password = decoded_user_info.split(':', 1)
             host, port_str = host_port_part.rsplit(':', 1)
-
+            
             if host.startswith('[') and host.endswith(']'): host = host[1:-1]
             if not remarks: remarks = f"{host}:{port_str}"
-
+            
             return ShadowsocksConfig(host=host, port=int(port_str), remarks=remarks, method=method, password=password)
         except Exception as e:
             raise ParsingError(f"Could not parse Shadowsocks link: {uri[:60]}") from e
-
+            
     @staticmethod
     def _parse_hysteria2(uri: str) -> Optional[Hysteria2Config]:
         try:
@@ -421,7 +381,7 @@ class V2RayParser:
             parsed_url = urlparse(uri)
             if not parsed_url.hostname or not parsed_url.port:
                 raise ParsingError("Missing hostname or port in Hysteria2 URI.")
-
+            
             params = parse_qs(parsed_url.query)
             return Hysteria2Config(
                 uuid=parsed_url.username or '',
@@ -442,7 +402,7 @@ class V2RayParser:
             parsed_url = urlparse(uri)
             if not parsed_url.hostname or not parsed_url.port or not parsed_url.username or not parsed_url.password:
                 raise ParsingError("Missing essential parts in TUIC URI.")
-
+            
             params = parse_qs(parsed_url.query)
             return TuicConfig(
                 uuid=parsed_url.username,
@@ -458,98 +418,35 @@ class V2RayParser:
         except (ValueError, TypeError, AttributeError) as e:
             raise ParsingError(f"Could not parse TUIC link correctly: {uri[:60]}") from e
 
-    @staticmethod
-    def _parse_shadowsocksr(uri: str) -> Optional[ShadowsocksRConfig]:
-        try:
-            b64_data = uri[len("ssr://"):]
-            decoded_data = b64_decode(b64_data)
-
-            main_part, params_part = decoded_data.split('/?')
-            params = parse_qs(params_part)
-
-            parts = main_part.split(':')
-            if len(parts) != 6: raise ParsingError("Invalid SSR main part.")
-
-            host, port, protocol, method, obfs, password_b64 = parts
-            password = b64_decode(password_b64)
-
-            remarks_b64 = params.get('remarks', [b64_encode('N/A')])[0]
-            remarks = b64_decode(remarks_b64)
-
-            return ShadowsocksRConfig(
-                host=host,
-                port=int(port),
-                uuid=password,
-                remarks=remarks,
-                protocol_param=params.get('protoparam', [None])[0],
-                obfs_param=params.get('obfsparam', [None])[0],
-                method=method,
-                obfs=obfs,
-                protocol='shadowsocksr'
-            )
-        except Exception as e:
-            raise ParsingError(f"Could not parse SSR link: {uri[:60]}") from e
-
-    @staticmethod
-    def _parse_wireguard(uri: str) -> Optional[WireGuardConfig]:
-        try:
-            parsed_url = urlparse(uri)
-            if not parsed_url.hostname or not parsed_url.port:
-                raise ParsingError("Missing host or port in WireGuard/Warp URI.")
-
-            params = parse_qs(parsed_url.query)
-
-            private_key = None
-            uuid_val = f"warp-{parsed_url.hostname}-{parsed_url.port}"
-
-            if parsed_url.scheme == 'wg':
-                if not parsed_url.username:
-                    raise ParsingError("Missing private key in wg:// URI.")
-                private_key = parsed_url.username
-                uuid_val = private_key
-
-            return WireGuardConfig(
-                uuid=uuid_val,
-                private_key=private_key,
-                host=parsed_url.hostname,
-                port=int(parsed_url.port),
-                remarks=unquote(parsed_url.fragment) if parsed_url.fragment else f"{parsed_url.hostname}:{parsed_url.port}",
-                public_key=params.get('public_key', [None])[0],
-                preshared_key=params.get('preshared_key', [None])[0],
-                ip=params.get('ip', [None])[0]
-            )
-        except Exception as e:
-            raise ParsingError(f"Could not parse WireGuard/Warp link: {uri[:60]}") from e
-
 class RawConfigCollector:
     PATTERNS = {
-        "ss": r"(ss://[^\s<>#]+)",
-        "trojan": r"(trojan://[^\s<>#]+)",
-        "vmess": r"(vmess://[^\s<>#]+)",
-        "vless": r"(vless://(?:(?!=reality)[^\s<>#])+(?=[\s<>#]))",
-        "reality": r"(vless://[^\s<>#]+?security=reality[^\s<>#]*)",
-        "hysteria2": r"((?:hy2|hysteria2)://[^\s<>#]+)",
-        "tuic": r"(tuic://[^\s<>#]+)",
-        "shadowsocksr": r"(ssr://[^\s<>#]+)",
-        "wireguard": r"((?:wg|warp)://[^\s<>#]+)",
+        "ss": r"(?<![\w-])(ss://[^\s<>#]+)", 
+        "trojan": r"(?<![\w-])(trojan://[^\s<>#]+)", 
+        "vmess": r"(?<![\w-])(vmess://[^\s<>#]+)", 
+        "vless": r"(?<![\w-])(vless://(?:(?!=reality)[^\s<>#])+(?=[\s<>#]))", 
+        "reality": r"(?<![\w-])(vless://[^\s<>#]+?security=reality[^\s<>#]*)",
+        "hysteria2": r"(?<![\w-])((?:hy2|hysteria2)://[^\s<>#]+)",
+        "tuic": r"(?<![\w-])(tuic://[^\s<>#]+)"
     }
 
     @classmethod
     def find_all(cls, text_content: str) -> Dict[str, List[str]]:
         all_matches = {}
         for name, pattern in cls.PATTERNS.items():
-            full_pattern = r"(?<![\w-])" + pattern
-            matches = re.findall(full_pattern, text_content, re.IGNORECASE)
-            cleaned_matches = [re.sub(r"#[^#]*$", "", m) for m in matches if "…" not in m]
+            matches = re.findall(pattern, text_content, re.IGNORECASE)
+            if name == 'hysteria2':
+                cleaned_matches = [re.sub(r"#[^#]*$", "", m[0]) for m in matches if "…" not in m[0]]
+            else:
+                cleaned_matches = [re.sub(r"#[^#]*$", "", m) for m in matches if "…" not in m]
+
             if cleaned_matches:
                 all_matches[name] = cleaned_matches
         return all_matches
 
-
 class TelegramScraper:
     def __init__(self, channels: List[str], since_datetime: datetime):
         self.channels, self.since_datetime, self.iran_tz = channels, since_datetime, get_iran_timezone()
-        self.configs_by_channel: Dict[str, List[str]] = {}
+        self.total_configs_by_type: Dict[str, List[str]] = {key: [] for key in RawConfigCollector.PATTERNS.keys()}
         self.successful_channels: List[Tuple[str, int]] = []
         self.failed_channels: List[str] = []
 
@@ -565,7 +462,7 @@ class TelegramScraper:
             console=console
         ) as progress:
             task = progress.add_task("channels", total=len(self.channels))
-
+            
             batch_size = 10
             channel_batches = [self.channels[i:i + batch_size] for i in range(0, len(self.channels), batch_size)]
 
@@ -579,11 +476,11 @@ class TelegramScraper:
                         configs_found = sum(len(v) for v in channel_results.values())
                         if configs_found > 0:
                             self.successful_channels.append((channel_name, configs_found))
-                            flat_configs = [config for sublist in channel_results.values() for config in sublist]
-                            self.configs_by_channel[channel_name] = flat_configs
+                            for config_type, configs in channel_results.items():
+                                self.total_configs_by_type[config_type].extend(configs)
                     else:
                         self.failed_channels.append(channel_name)
-
+                    
                     progress.update(task, advance=1)
 
                 if i < len(channel_batches) - 1:
@@ -627,7 +524,7 @@ class TelegramScraper:
 
                     channel_configs: Dict[str, List[str]] = {key: [] for key in RawConfigCollector.PATTERNS.keys()}
                     configs_count_in_channel = 0
-
+                    
                     for msg in messages:
                         if configs_count_in_channel >= CONFIG.MAX_CONFIGS_PER_CHANNEL:
                             break
@@ -643,11 +540,11 @@ class TelegramScraper:
                                         for config_type, configs in found_configs.items():
                                             remaining_slots = CONFIG.MAX_CONFIGS_PER_CHANNEL - configs_count_in_channel
                                             if remaining_slots <= 0: break
-
+                                            
                                             configs_to_add = configs[:remaining_slots]
                                             channel_configs[config_type].extend(configs_to_add)
                                             configs_count_in_channel += len(configs_to_add)
-
+                                        
                                         if configs_count_in_channel >= CONFIG.MAX_CONFIGS_PER_CHANNEL:
                                             break
                             except (ValueError, TypeError): continue
@@ -721,7 +618,7 @@ class FileManager:
     def _add_signatures(self, configs: List[BaseConfig]) -> List[str]:
         uris = [c.to_uri() for c in configs]
         now = datetime.now(get_iran_timezone())
-        update_str = f"🕒 LAST UPDATE: {now.strftime('%Y/%m/%d | %H:%M')}"
+        update_str = f"[ LAST UPDATE: {now.strftime('%Y-%m-%d | %H:%M')} ]"
 
         final_list = uris[:]
         final_list.insert(0, self._create_title_config(update_str, 1080))
@@ -744,9 +641,9 @@ class Geolocation:
         if CONFIG.GEOIP_DB_FILE.exists():
             try:
                 cls._country_reader = geoip2.database.Reader(str(CONFIG.GEOIP_DB_FILE))
-            except Exception:
+            except Exception: 
                 cls._country_reader = None
-
+        
         if CONFIG.GEOIP_ASN_DB_FILE.exists():
             try:
                 cls._asn_reader = geoip2.database.Reader(str(CONFIG.GEOIP_ASN_DB_FILE))
@@ -777,7 +674,7 @@ class Geolocation:
             return response.country.iso_code or "XX"
         except (geoip2.errors.AddressNotFoundError, Exception):
             return "XX"
-
+    
     @classmethod
     def get_asn_from_ip(cls, ip: str) -> Optional[str]:
         if cls._asn_reader is None or ip is None: return None
@@ -820,44 +717,44 @@ class ConfigProcessor:
 
         if CONFIG.ENABLE_SEEN_CONFIG_FILTER:
             self._filter_by_seen_cache()
-
+        
         await self._resolve_geo_info()
         if CONFIG.ENABLE_IP_DEDUPLICATION:
             self._deduplicate_by_ip()
 
         if CONFIG.ENABLE_CONNECTIVITY_TEST:
             await self._test_connectivity()
-
+            
         self._format_config_remarks()
-
+        
         temp_list = list(self.parsed_configs.values())
         random.shuffle(temp_list)
-
+        
         if CONFIG.ENABLE_CONNECTIVITY_TEST:
             temp_list.sort(key=lambda item: item.ping if item.ping is not None else 9999)
-
+        
         self.parsed_configs = {cfg.get_deduplication_key(): cfg for cfg in temp_list}
 
     def _filter_by_seen_cache(self):
         now_utc = datetime.now(timezone.utc)
         timeout = timedelta(hours=CONFIG.SEEN_CONFIG_TIMEOUT_HOURS)
-
+        
         configs_to_keep = {}
         removed_count = 0
-
+        
         for key, config in self.parsed_configs.items():
             if key in self.seen_configs:
                 try:
                     seen_time = datetime.fromisoformat(self.seen_configs[key])
                     if now_utc - seen_time < timeout:
                         removed_count += 1
-                        continue
+                        continue 
                 except (ValueError, TypeError):
                     pass
-
+            
             configs_to_keep[key] = config
             self.seen_configs[key] = now_utc.isoformat()
-
+            
         self.parsed_configs = configs_to_keep
         if removed_count > 0:
             console.log(f"Filtered out {removed_count} recently seen configs. {len(self.parsed_configs)} remaining.")
@@ -866,7 +763,7 @@ class ConfigProcessor:
         unique_hosts = list({c.host for c in self.parsed_configs.values()})
         console.log(f"Resolving geo-information for {len(unique_hosts)} unique hosts...")
         await asyncio.gather(*[Geolocation.get_ip(host) for host in unique_hosts])
-
+        
         for config in self.parsed_configs.values():
             ip_address = Geolocation._ip_cache.get(config.host)
             if ip_address:
@@ -876,7 +773,7 @@ class ConfigProcessor:
     def _deduplicate_by_ip(self):
         unique_ips: Dict[str, BaseConfig] = {}
         kept_configs: Dict[str, BaseConfig] = {}
-
+        
         for key, config in self.parsed_configs.items():
             ip = Geolocation._ip_cache.get(config.host)
             if ip and ip not in unique_ips:
@@ -892,13 +789,13 @@ class ConfigProcessor:
     async def _test_tcp_connection(self, config: BaseConfig) -> Optional[int]:
         ip = Geolocation._ip_cache.get(config.host)
         if not ip: return None
-
+        
         try:
             start_time = asyncio.get_event_loop().time()
             fut = asyncio.open_connection(ip, config.port)
             reader, writer = await asyncio.wait_for(fut, timeout=CONFIG.CONNECTIVITY_TEST_TIMEOUT)
-
-            writer.write(b"\x01")
+            
+            writer.write(b"\x01") 
             await writer.drain()
             await reader.read(1)
 
@@ -913,7 +810,7 @@ class ConfigProcessor:
         configs_to_test = list(self.parsed_configs.values())
         if len(configs_to_test) > CONFIG.MAX_CONNECTIVITY_TESTS:
             configs_to_test = random.sample(configs_to_test, CONFIG.MAX_CONNECTIVITY_TESTS)
-
+        
         self.tested_configs_count = len(configs_to_test)
 
         with Progress(
@@ -925,7 +822,7 @@ class ConfigProcessor:
             console=console
         ) as progress:
             ping_task = progress.add_task("pinging", total=len(configs_to_test))
-
+            
             tasks = [self._test_tcp_connection(config) for config in configs_to_test]
             results = await asyncio.gather(*tasks)
 
@@ -933,24 +830,20 @@ class ConfigProcessor:
                 if ping_result is not None:
                     config.ping = ping_result
                 progress.update(ping_task, advance=1)
-
+        
         self.active_configs_count = sum(1 for c in configs_to_test if c.ping is not None)
         console.log(f"Connectivity test complete. {self.active_configs_count}/{self.tested_configs_count} configs responded.")
 
     def _format_config_remarks(self):
         for config in self.parsed_configs.values():
-            proto_full_map = {
-                'vmess': 'VMESS', 'vless': 'VLESS', 'trojan': 'TROJAN',
-                'shadowsocks': 'SHADOWSOCKS', 'hysteria2': 'HYSTERIA2', 'tuic': 'TUIC',
-                'shadowsocksr': 'SSR', 'wireguard': 'WIREGUARD'
-            }
+            proto_full_map = {'vmess': 'VMESS', 'vless': 'VLESS', 'trojan': 'TROJAN', 'shadowsocks': 'SHADOWSOCKS', 'hysteria2': 'HYSTERIA2', 'tuic': 'TUIC'}
             proto_full = proto_full_map.get(config.protocol, 'CFG')
 
             sec = 'RLT' if config.source_type == 'reality' else (config.security.upper() if config.security != 'none' else 'NTLS')
             net = config.network.upper() if config.network else 'N/A'
             flag = COUNTRY_CODE_TO_FLAG.get(config.country, "🏳️")
             ip_address = Geolocation._ip_cache.get(config.host, "N/A")
-
+            
             asn_str = f" - {config.asn_org}" if config.asn_org else ""
             new_remark = f"{config.country} {flag} ┇ {proto_full}-{net}-{sec}{asn_str} ┇ {ip_address}"
             config.remarks = new_remark.strip()
@@ -960,18 +853,22 @@ class ConfigProcessor:
 
     def categorize(self) -> Dict[str, Dict[str, List[BaseConfig]]]:
         configs = self.get_all_unique_configs()
-        categories: Dict[str, Dict[str, List[BaseConfig]]] = {
-            "protocols": {}, "networks": {}, "security": {}, "countries": {}, "datacenters": {}
+        categories: Dict[str, Dict[str, List[BaseConfig]]] = { 
+            "protocols": {}, "networks": {}, "security": {}, "countries": {}, "datacenters": {} 
         }
-
+        
         for config in configs:
+            # Protocols
             categories["protocols"].setdefault(config.protocol, []).append(config)
-
+            
+            # Networks
             if config.network:
                 categories["networks"].setdefault(config.network, []).append(config)
             if config.source_type == 'reality':
                 categories["networks"].setdefault('reality', []).append(config)
 
+
+            # Security
             if config.security == 'tls':
                 categories["security"].setdefault('tls', []).append(config)
             elif config.security == 'xtls':
@@ -979,13 +876,15 @@ class ConfigProcessor:
             elif config.security == 'none':
                 categories["security"].setdefault('nontls', []).append(config)
 
+            # Countries
             if config.country and config.country != "XX":
                 categories["countries"].setdefault(config.country, []).append(config)
-
+            
+            # Datacenters
             if config.asn_org:
                 sanitized_asn = re.sub(r'[\\/*?:"<>|,]', "", config.asn_org).replace(" ", "_")
                 categories["datacenters"].setdefault(sanitized_asn, []).append(config)
-
+                
         return categories
 
 class V2RayCollectorApp:
@@ -994,10 +893,9 @@ class V2RayCollectorApp:
         self.file_manager = FileManager(self.config)
         self.last_update_time = datetime.now(timezone.utc) - timedelta(days=1)
         self.seen_configs = {}
-        self.start_time = datetime.now()
 
     async def run(self):
-        console.rule("[bold green]V2Ray Config Collector - v7.0.4[/bold green]")
+        console.rule("[bold green]V2Ray Config Collector - v6.0.0[/bold green]")
         await self._load_state()
 
         tg_channels = await self.file_manager.read_json_file(self.config.TELEGRAM_CHANNELS_FILE)
@@ -1010,15 +908,9 @@ class V2RayCollectorApp:
         if sub_links and CONFIG.ENABLE_SUBSCRIPTION_FETCHING: await sub_fetcher.fetch_all()
 
         combined_raw_configs: Dict[str, List[str]] = {key: [] for key in RawConfigCollector.PATTERNS.keys()}
-        for channel, configs in tg_scraper.configs_by_channel.items():
-            for config in configs:
-                for proto, pattern in RawConfigCollector.PATTERNS.items():
-                    if re.match(r"(?<![\w-])" + pattern, config):
-                        combined_raw_configs[proto].append(config)
-                        break
-
-        for config_type, configs in sub_fetcher.total_configs_by_type.items():
-            combined_raw_configs[config_type].extend(configs)
+        for config_type in combined_raw_configs.keys():
+            combined_raw_configs[config_type].extend(tg_scraper.total_configs_by_type.get(config_type, []))
+            combined_raw_configs[config_type].extend(sub_fetcher.total_configs_by_type.get(config_type, []))
 
         if not any(combined_raw_configs.values()):
             console.log("[yellow]No new configurations found. Exiting.[/yellow]")
@@ -1032,11 +924,11 @@ class V2RayCollectorApp:
         if not all_unique_configs:
             console.log("[yellow]No valid unique configurations to save. Exiting.[/yellow]")
             return
-
+            
         categories = processor.categorize()
-        await self._save_results(all_unique_configs, categories, tg_scraper.configs_by_channel)
+        await self._save_results(all_unique_configs, categories)
         await self._save_state()
-        self._print_summary_report(processor, tg_scraper, sub_fetcher, self.start_time)
+        self._print_summary_report(processor)
         console.log("[bold green]Collection and processing complete.[/bold green]")
 
     async def _load_state(self):
@@ -1046,7 +938,7 @@ class V2RayCollectorApp:
                     self.seen_configs = json.loads(await f.read())
             except Exception:
                 self.seen_configs = {}
-
+        
         if self.config.LAST_UPDATE_FILE.exists():
             try:
                 async with aiofiles.open(self.config.LAST_UPDATE_FILE, 'r') as f:
@@ -1058,7 +950,7 @@ class V2RayCollectorApp:
             async with aiofiles.open(self.config.SEEN_CONFIGS_FILE, 'w') as f:
                 await f.write(json.dumps(self.seen_configs, indent=4))
         except IOError: pass
-
+        
         try:
             async with aiofiles.open(self.config.LAST_UPDATE_FILE, 'w') as f:
                 await f.write(datetime.now(timezone.utc).isoformat())
@@ -1068,93 +960,85 @@ class V2RayCollectorApp:
         name = re.sub(r'[\U0001F600-\U0001F64F\U0001F300-\U0001F5FF\U0001F680-\U0001F6FF\U0001F700-\U0001F77F\U0001F780-\U0001F7FF\U0001F800-\U0001F8FF\U0001F900-\U0001F9FF\U0001FA00-\U0001FA6F\U0001FA70-\U0001FAFF\U00002702-\U000027B0\U00002620-\U0000262F\U00002300-\U000023FF\U00002B50]', '', name)
         return re.sub(r'[\\/*?:"<>|,@=]', "", name).replace(" ", "_")
 
-    async def _save_results(self, all_configs: List[BaseConfig], categories: Dict[str, Any], configs_by_channel: Dict[str, List[str]]):
+    async def _save_results(self, all_configs: List[BaseConfig], categories: Dict[str, Any]):
         console.log("Saving categorized configurations...")
-
+        
         save_tasks: List[Coroutine] = []
         save_tasks.append(self.file_manager.write_configs_to_file(self.config.DIRS["subscribe"] / "base64.txt", all_configs))
+        save_tasks.append(self.file_manager.write_configs_to_file(self.config.OUTPUT_DIR / "all_configs.txt", all_configs, base64_encode=False))
         
-        protocols_to_skip = ['shadowsocksr', 'tuic', 'wireguard']
-
         for cat_name, cat_items in categories.items():
-            if cat_name == "datacenters":
-                continue
-
             for item_name, configs in cat_items.items():
-                if cat_name == "protocols" and item_name in protocols_to_skip:
-                    continue
-
                 if configs:
                     sanitized_name = self._sanitize_filename(str(item_name))
                     if not sanitized_name: continue
-                    
-                    if item_name == 'wireguard':
-                        path = self.config.DIRS[cat_name] / "warp.txt"
-                    else:
-                        path = self.config.DIRS[cat_name] / f"{sanitized_name}.txt"
-                    save_tasks.append(self.file_manager.write_configs_to_file(path, configs))
-
+                    path = self.config.DIRS[cat_name] / f"{sanitized_name}.txt"
+                    save_tasks.append(self.file_manager.write_configs_to_file(path, configs, base64_encode=False))
+            
         chunk_size = math.ceil(len(all_configs) / 20) if all_configs else 0
         if chunk_size > 0:
             for i, chunk in enumerate([all_configs[i:i + chunk_size] for i in range(0, len(all_configs), chunk_size)]):
                 path = self.config.DIRS["splitted"] / f"mixed_{i+1}.txt"
-                save_tasks.append(self.file_manager.write_configs_to_file(path, chunk))
-
-        allowed_protocols_for_mix = ['vmess', 'vless', 'trojan', 'shadowsocks']
+                save_tasks.append(self.file_manager.write_configs_to_file(path, chunk, base64_encode=False))
+        
         for protocol, configs in categories["protocols"].items():
-            if protocol not in allowed_protocols_for_mix:
-                continue
-
             if not configs: continue
             random.shuffle(configs)
             chunk_size_proto = math.ceil(len(configs) / 5)
             if chunk_size_proto > 0:
                 for i, chunk in enumerate([configs[i:i + chunk_size_proto] for i in range(0, len(configs), chunk_size_proto)][:5]):
                     path = self.config.DIRS["mix_protocol"] / f"mix_{protocol}_{i+1}.txt"
-                    save_tasks.append(self.file_manager.write_configs_to_file(path, chunk))
+                    save_tasks.append(self.file_manager.write_configs_to_file(path, chunk, base64_encode=False))
+
+        # Save tested configs
+        if CONFIG.ENABLE_CONNECTIVITY_TEST:
+            tested_configs = [c for c in all_configs if c.ping is not None]
+            if tested_configs:
+                path = self.config.DIRS["tested_configs"] / "actives.txt"
+                save_tasks.append(self.file_manager.write_configs_to_file(path, tested_configs, base64_encode=False))
+                
+                if len(tested_configs) > 1000:
+                    chunk_size_tested = math.ceil(len(tested_configs) / 10)
+                    for i, chunk in enumerate([tested_configs[i:i + chunk_size_tested] for i in range(0, len(tested_configs), chunk_size_tested)]):
+                        path = self.config.DIRS["tested_configs"] / f"mixed_{i+1}.txt"
+                        save_tasks.append(self.file_manager.write_configs_to_file(path, chunk, base64_encode=False))
+
 
         await asyncio.gather(*save_tasks)
 
-    def _print_summary_report(self, processor: ConfigProcessor, tg_scraper: TelegramScraper, sub_fetcher: SubscriptionFetcher, start_time: datetime):
+    def _print_summary_report(self, processor: ConfigProcessor):
         all_configs = processor.get_all_unique_configs()
         protocol_counts = Counter(c.protocol for c in all_configs)
         country_counts = Counter(c.country for c in all_configs if c.country and c.country != 'XX')
         asn_counts = Counter(c.asn_org for c in all_configs if c.asn_org)
 
-        duration = datetime.now() - start_time
-        duration_str = str(duration).split('.')[0]
-
-        run_details_table = Table(title="⚙️ Run Details ⚙️", title_style="bold yellow")
-        run_details_table.add_column("Item", style="cyan", justify="right")
-        run_details_table.add_column("Value", style="bold green", justify="left")
-        run_details_table.add_row("Script Version", CONFIG.DEV_SIGNATURE.split(' ')[-1])
-        run_details_table.add_row("Start Time", start_time.strftime('%Y-%m-%d %H:%M:%S'))
-        run_details_table.add_row("Duration", duration_str)
-        console.print(run_details_table)
-
-        source_table = Table(title="📊 Source Summary 📊", title_style="bold magenta")
-        source_table.add_column("Source", style="cyan", justify="right")
-        source_table.add_column("Raw Configs Found", style="bold green", justify="left")
-        tg_raw_count = sum(len(v) for v in tg_scraper.configs_by_channel.values())
-        sub_raw_count = sum(len(v) for v in sub_fetcher.total_configs_by_type.values())
-        source_table.add_row("Telegram Channels", str(tg_raw_count))
-        source_table.add_row("Subscription Links", str(sub_raw_count))
-        source_table.add_row("[b]Total Raw[/b]", f"[b]{processor.total_raw_count}[/b]")
-        console.print(source_table)
-
-        now_str = datetime.now(get_iran_timezone()).strftime('%Y-%m-%d %H:%M')
-        summary_table = Table(title=f"📈 Final Collection Report ({now_str}) 📈", title_style="bold magenta", show_header=False)
+        summary_table = Table(title="📊 Final Collection Report 📊", title_style="bold magenta", show_header=False)
         summary_table.add_column("Key", style="cyan")
         summary_table.add_column("Value", style="bold green")
+
+        summary_table.add_row("Raw Configs Found", str(processor.total_raw_count))
         summary_table.add_row("Unique & Valid Configs", str(len(all_configs)))
+        
         console.print(summary_table)
+
+        if CONFIG.ENABLE_CONNECTIVITY_TEST:
+            test_table = Table(title="📶 Connectivity Test Report", title_style="bold magenta", show_header=False)
+            test_table.add_column("Key", style="cyan")
+            test_table.add_column("Value", style="bold green")
+            inactive_count = processor.tested_configs_count - processor.active_configs_count
+            
+            test_table.add_row("Configs Tested", str(processor.tested_configs_count))
+            test_table.add_row("Active (Responded)", f"[green]{processor.active_configs_count}[/green]")
+            test_table.add_row("Inactive (No Response)", f"[red]{inactive_count}[/red]")
+            console.print(test_table)
+
 
         proto_table = Table(title="📈 Configs by Protocol", title_style="bold blue")
         proto_table.add_column("Protocol", style="cyan")
         proto_table.add_column("Count", style="bold green")
         for protocol, count in protocol_counts.most_common():
             proto_table.add_row(protocol.upper(), str(count))
-
+            
         country_table = Table(title="🌍 Top 5 Countries", title_style="bold blue")
         country_table.add_column("Flag")
         country_table.add_column("Country", style="cyan")
@@ -1172,10 +1056,7 @@ class V2RayCollectorApp:
         console.print(proto_table)
         console.print(country_table)
         console.print(asn_table)
-
-        commit_message = f"feat: Update configs - {len(all_configs)} total"
-        console.print(Panel(f"[bold cyan]{commit_message}[/bold cyan]", title="💡 Suggested Commit Message", border_style="yellow"))
-
+        
 async def _download_db_if_needed(url: str, file_path: Path):
     if not file_path.exists():
         console.log(f"[yellow]{file_path.name} not found, downloading...[/yellow]")
@@ -1189,18 +1070,6 @@ async def _download_db_if_needed(url: str, file_path: Path):
         except Exception as e:
             console.log(f"[bold red]Failed to download {file_path.name}: {e}.[/bold red]")
 
-async def _setup_data_file(remote_url: str, local_path: Path):
-    if not local_path.exists():
-        console.log(f"[yellow]{local_path.name} not found, fetching from remote...[/yellow]")
-        try:
-            status, content = await AsyncHttpClient.get(remote_url)
-            if status == 200 and content:
-                data = json.loads(content)
-                async with aiofiles.open(local_path, "w", encoding='utf-8') as f:
-                    await f.write(json.dumps(data, indent=4))
-                console.log(f"[green]Successfully created {local_path.name} from remote source.[/green]")
-        except Exception as e:
-            console.log(f"[bold red]Failed to create {local_path.name} from {remote_url}: {e}[/bold red]")
 
 async def main():
     CONFIG.DATA_DIR.mkdir(exist_ok=True)
@@ -1208,10 +1077,45 @@ async def main():
     await _download_db_if_needed(CONFIG.GEOIP_DB_URL, CONFIG.GEOIP_DB_FILE)
     await _download_db_if_needed(CONFIG.GEOIP_ASN_DB_URL, CONFIG.GEOIP_ASN_DB_FILE)
 
-    await _setup_data_file(CONFIG.REMOTE_CHANNELS_URL, CONFIG.TELEGRAM_CHANNELS_FILE)
-    await _setup_data_file(CONFIG.REMOTE_SUBS_URL, CONFIG.SUBSCRIPTION_LINKS_FILE)
-
     Geolocation.initialize()
+
+    if not CONFIG.SUBSCRIPTION_LINKS_FILE.exists():
+        new_links = [
+            "https://raw.githubusercontent.com/miladtahanian/V2RayCFGDumper/main/config.txt", 
+            "https://raw.githubusercontent.com/SoliSpirit/v2ray-configs/main/all_configs.txt",
+            "https://raw.githubusercontent.com/V2RAYCONFIGSPOOL/V2RAY_SUB/main/v2ray_configs.txt", 
+            "https://raw.githubusercontent.com/MatinGhanbari/v2ray-configs/main/subscriptions/v2ray/all_sub.txt",
+            "https://raw.githubusercontent.com/mahdibland/V2RayAggregator/master/sub/sub_merge.txt", 
+            "https://raw.githubusercontent.com/MrMohebi/xray-proxy-grabber-telegram/master/collected-proxies/row-url/all.txt",
+            "https://raw.githubusercontent.com/MrMohebi/xray-proxy-grabber-telegram/master/collected-proxies/row-url/actives.txt", 
+            "https://raw.githubusercontent.com/sevcator/5ubscrpt10n/main/full/5ubscrpt10n.txt",
+            "https://raw.githubusercontent.com/skywrt/v2ray-configs/main/All_Configs_Sub.txt", 
+            "https://raw.githubusercontent.com/barry-far/V2ray-Config/main/All_Configs_Sub.txt",
+            "https://raw.githubusercontent.com/Kwinshadow/TelegramV2rayCollector/main/sublinks/mix.txt", 
+            "https://raw.githubusercontent.com/GuoBing1989100/v2ray_configs/main/all.txt",
+            "https://raw.githubusercontent.com/arshiacomplus/v2rayExtractor/main/mix/sub.html", 
+            "https://raw.githubusercontent.com/hamed1124/port-based-v2ray-configs/main/All-Configs.txt",
+            "https://raw.githubusercontent.com/miladesign/TelegramV2rayCollector/main/api/normal", 
+            "https://raw.githubusercontent.com/SamanGho/v2ray_collector/main/v2tel_links1.txt",
+            "https://raw.githubusercontent.com/jagger235711/V2rayCollector/main/results/mixed_tested.txt", 
+            "https://raw.githubusercontent.com/SamanGho/v2ray_collector/main/v2tel_links2.txt",
+            "https://raw.githubusercontent.com/nyeinkokoaung404/V2ray-Configs/main/All_Configs_Sub.txt", 
+            "https://raw.githubusercontent.com/Epodonios/bulk-xray-v2ray-vless-vmess-trojan-ss-configs/main/sub/Iran/config.txt",
+            "https://raw.githubusercontent.com/Surfboardv2ray/TGParse/main/configtg.txt",
+            "https://raw.githubusercontent.com/SamanGho/v2ray_collector/refs/heads/main/v2tel_links1.txt",
+            "https://raw.githubusercontent.com/SamanGho/v2ray_collector/refs/heads/main/v2tel_links2.txt"
+        ]
+        with open(CONFIG.SUBSCRIPTION_LINKS_FILE, "w") as f: json.dump(list(set(new_links)), f, indent=4)
+
+    if not CONFIG.TELEGRAM_CHANNELS_FILE.exists():
+         try:
+            status, content = await AsyncHttpClient.get(CONFIG.REMOTE_CHANNELS_URL)
+            if status == 200 and content:
+                channels = json.loads(content)
+                if isinstance(channels, list):
+                    async with aiofiles.open(CONFIG.TELEGRAM_CHANNELS_FILE, "w", encoding='utf-8') as f:
+                        await f.write(json.dumps(channels, indent=4))
+         except Exception: pass
 
     app = V2RayCollectorApp()
     try:
